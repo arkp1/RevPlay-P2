@@ -101,20 +101,19 @@ src/
 
 ```mermaid
 erDiagram
-    users {
+    USERS {
         BIGINT user_id PK
-        VARCHAR user_name UK
-        VARCHAR email UK
+        VARCHAR user_name
+        VARCHAR email
         VARCHAR user_password
         ENUM role
         TEXT bio
         VARCHAR profile_image
-        TIMESTAMP created_at
         VARCHAR security_question
         VARCHAR security_answer
+        TIMESTAMP created_at
     }
-
-    artists {
+    ARTISTS {
         BIGINT artist_id PK
         BIGINT user_id FK
         VARCHAR artist_name
@@ -125,9 +124,9 @@ erDiagram
         VARCHAR twitter_link
         VARCHAR spotify_link
         VARCHAR website_link
+        BIGINT follower_count
     }
-
-    albums {
+    ALBUMS {
         BIGINT album_id PK
         BIGINT artist_id FK
         VARCHAR title
@@ -136,8 +135,7 @@ erDiagram
         VARCHAR cover_image
         TIMESTAMP created_at
     }
-
-    songs {
+    SONGS {
         BIGINT song_id PK
         BIGINT artist_id FK
         BIGINT album_id FK
@@ -150,8 +148,7 @@ erDiagram
         DATE release_date
         TIMESTAMP created_at
     }
-
-    podcasts {
+    PODCASTS {
         BIGINT podcast_id PK
         BIGINT artist_id FK
         VARCHAR title
@@ -160,8 +157,7 @@ erDiagram
         VARCHAR cover_image
         TIMESTAMP created_at
     }
-
-    podcast_episodes {
+    PODCAST_EPISODES {
         BIGINT episode_id PK
         BIGINT podcast_id FK
         VARCHAR title
@@ -172,8 +168,17 @@ erDiagram
         BIGINT play_count
         TIMESTAMP created_at
     }
-
-    playlists {
+    FAVORITES {
+        BIGINT user_id PK "FK"
+        BIGINT song_id PK "FK"
+        TIMESTAMP added_at
+    }
+    PODCAST_FAVORITES {
+        BIGINT user_id PK "FK"
+        BIGINT episode_id PK "FK"
+        TIMESTAMP favorited_at
+    }
+    PLAYLISTS {
         BIGINT playlist_id PK
         BIGINT user_id FK
         VARCHAR name
@@ -181,64 +186,56 @@ erDiagram
         ENUM privacy
         TIMESTAMP created_at
     }
-
-    favorites {
-        BIGINT user_id FK
-        BIGINT song_id FK
-        TIMESTAMP added_at
-    }
-
-    podcast_favorites {
-        BIGINT user_id FK
-        BIGINT episode_id FK
-        TIMESTAMP favorited_at
-    }
-
-    playlist_songs {
-        BIGINT playlist_id FK
-        BIGINT song_id FK
+    PLAYLIST_SONGS {
+        BIGINT playlist_id PK "FK"
+        BIGINT song_id PK "FK"
         INT position
     }
-
-    playlist_followers {
-        BIGINT playlist_id FK
-        BIGINT user_id FK
+    PLAYLIST_FOLLOWERS {
+        BIGINT playlist_id PK "FK"
+        BIGINT user_id PK "FK"
         TIMESTAMP followed_at
     }
-
-    listening_history {
+    ARTIST_FOLLOWERS {
+        BIGINT id PK
+        BIGINT user_id FK
+        BIGINT artist_id FK
+        TIMESTAMP followed_at
+    }
+    LISTENING_HISTORY {
         BIGINT history_id PK
         BIGINT user_id FK
         BIGINT song_id FK
         TIMESTAMP played_at
     }
-
-    podcast_listening_history {
+    PODCAST_LISTENING_HISTORY {
         BIGINT history_id PK
         BIGINT user_id FK
         BIGINT episode_id FK
         TIMESTAMP played_at
     }
 
-    users ||--|| artists : "has profile"
-    artists ||--o{ albums : "releases"
-    artists ||--o{ songs : "creates"
-    artists ||--o{ podcasts : "hosts"
-    albums ||--o{ songs : "contains"
-    podcasts ||--o{ podcast_episodes : "has"
-    users ||--o{ playlists : "owns"
-    users ||--o{ favorites : "likes"
-    users ||--o{ podcast_favorites : "likes"
-    users ||--o{ playlist_followers : "follows"
-    users ||--o{ listening_history : "played"
-    users ||--o{ podcast_listening_history : "played"
-    playlists ||--o{ playlist_songs : "includes"
-    playlists ||--o{ playlist_followers : "followed by"
-    songs ||--o{ playlist_songs : "added to"
-    songs ||--o{ favorites : "liked via"
-    songs ||--o{ listening_history : "tracked in"
-    podcast_episodes ||--o{ podcast_favorites : "liked via"
-    podcast_episodes ||--o{ podcast_listening_history : "tracked in"
+    USERS ||--|| ARTISTS : "has profile"
+    ARTISTS ||--o{ ALBUMS : creates
+    ARTISTS ||--o{ SONGS : uploads
+    ARTISTS ||--o{ PODCASTS : creates
+    ALBUMS ||--o{ SONGS : contains
+    PODCASTS ||--o{ PODCAST_EPISODES : contains
+    USERS ||--o{ FAVORITES : likes
+    SONGS ||--o{ FAVORITES : favorited_in
+    USERS ||--o{ PODCAST_FAVORITES : likes
+    PODCAST_EPISODES ||--o{ PODCAST_FAVORITES : favorited_in
+    USERS ||--o{ PLAYLISTS : creates
+    PLAYLISTS ||--o{ PLAYLIST_SONGS : contains
+    SONGS ||--o{ PLAYLIST_SONGS : included_in
+    USERS ||--o{ PLAYLIST_FOLLOWERS : follows
+    PLAYLISTS ||--o{ PLAYLIST_FOLLOWERS : followed_by
+    USERS ||--o{ ARTIST_FOLLOWERS : follows
+    ARTISTS ||--o{ ARTIST_FOLLOWERS : followed_by
+    USERS ||--o{ LISTENING_HISTORY : logs
+    SONGS ||--o{ LISTENING_HISTORY : played_in
+    USERS ||--o{ PODCAST_LISTENING_HISTORY : logs
+    PODCAST_EPISODES ||--o{ PODCAST_LISTENING_HISTORY : played_in
 ```
 
 ---
