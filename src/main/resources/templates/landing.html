@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>RevPlay</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=Playfair+Display:ital,wght@0,900;1,900&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --green:#1db954;
+  --green-light:#1ed760;
+  --bg:#060606;
+  --border:rgba(255,255,255,0.07);
+  --text:#ffffff;
+  --muted:rgba(255,255,255,0.4);
+}
+
+html{scroll-behavior:smooth}
+
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  overflow-x:hidden;
+}
+
+/* NAV */
+nav{
+  position:fixed;
+  top:0;left:0;right:0;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:28px 56px;
+  z-index:200;
+  transition:background .4s,backdrop-filter .4s,padding .3s;
+}
+nav.scrolled{
+  background:rgba(6,6,6,0.9);
+  backdrop-filter:blur(24px);
+  padding:18px 56px;
+  border-bottom:1px solid var(--border);
+}
+
+.logo{
+  font-family:'Syne',sans-serif;
+  font-size:19px;
+  font-weight:800;
+  color:var(--green);
+  letter-spacing:5px;
+  text-transform:uppercase;
+}
+
+.nav-login{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:9px 22px;
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:8px;
+  color:rgba(255,255,255,0.8);
+  font-family:'DM Sans',sans-serif;
+  font-size:13px;
+  font-weight:500;
+  text-decoration:none;
+  transition:all .2s;
+  letter-spacing:.3px;
+}
+.nav-login:hover{
+  border-color:var(--green);
+  color:var(--green);
+  background:rgba(29,185,84,0.07);
+}
+
+/* HERO */
+.hero{
+  position:relative;
+  height:100vh;
+  min-height:700px;
+  display:flex;
+  align-items:flex-end;
+  overflow:hidden;
+}
+
+.collage{
+  position:absolute;
+  inset:0;
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  grid-template-rows:repeat(3,1fr);
+  gap:4px;
+}
+.collage-tile{overflow:hidden;position:relative}
+.collage-tile img{
+  width:100%;height:100%;object-fit:cover;display:block;
+  transform:scale(1.08);
+  transition:transform 10s ease;
+  filter:saturate(0.6) brightness(0.5);
+}
+.collage-tile:hover img{transform:scale(1.15)}
+
+.collage-overlay{
+  position:absolute;inset:0;
+  background:
+    linear-gradient(to top,rgba(6,6,6,1) 0%,rgba(6,6,6,0.75) 28%,rgba(6,6,6,0.1) 60%,transparent 100%),
+    linear-gradient(to right,rgba(6,6,6,0.85) 0%,rgba(6,6,6,0.2) 50%,transparent 100%),
+    linear-gradient(135deg,rgba(29,185,84,0.05) 0%,transparent 55%);
+  z-index:2;
+}
+
+.hero-content{
+  position:relative;z-index:10;
+  padding:0 56px 76px;
+  max-width:860px;
+}
+
+.hero-badge{
+  display:inline-flex;align-items:center;gap:9px;
+  padding:5px 14px 5px 9px;border-radius:100px;
+  background:rgba(29,185,84,0.1);
+  border:1px solid rgba(29,185,84,0.22);
+  font-size:11px;font-weight:600;color:var(--green);
+  letter-spacing:.9px;text-transform:uppercase;
+  margin-bottom:30px;
+  animation:fadeUp .8s ease both;
+}
+.badge-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--green);
+  animation:pulse 2s ease infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+
+.hero-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(62px,9vw,126px);
+  font-weight:900;
+  line-height:.93;
+  letter-spacing:-3px;
+  margin-bottom:0;
+  animation:fadeUp .8s .1s ease both;
+}
+.title-green{color:var(--green);font-style:italic}
+.title-outline{
+  -webkit-text-stroke:1.5px rgba(255,255,255,0.22);
+  color:transparent;
+}
+
+.hero-sub{
+  font-size:17px;
+  color:rgba(255,255,255,0.44);
+  max-width:460px;line-height:1.75;
+  margin:30px 0 42px;
+  animation:fadeUp .8s .2s ease both;
+}
+
+.hero-cta{
+  display:flex;align-items:center;gap:18px;
+  animation:fadeUp .8s .3s ease both;
+}
+
+.btn-primary{
+  padding:15px 36px;
+  background:var(--green);border:none;border-radius:8px;
+  color:#000;font-family:'Syne',sans-serif;font-size:14px;
+  font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+  cursor:pointer;text-decoration:none;
+  transition:background .2s,transform .15s,box-shadow .3s;
+  box-shadow:0 0 40px rgba(29,185,84,0.28);
+}
+.btn-primary:hover{
+  background:var(--green-light);
+  transform:translateY(-2px);
+  box-shadow:0 0 65px rgba(29,185,84,0.5);
+}
+
+.btn-ghost{
+  display:flex;align-items:center;gap:10px;
+  color:rgba(255,255,255,0.5);font-size:14px;
+  text-decoration:none;letter-spacing:.3px;
+  transition:color .2s;
+}
+.btn-ghost svg{transition:transform .2s}
+.btn-ghost:hover{color:#fff}
+.btn-ghost:hover svg{transform:translateX(5px)}
+
+/* scroll indicator */
+.scroll-hint{
+  position:absolute;bottom:34px;right:56px;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  z-index:10;animation:fadeUp .8s .6s ease both;
+}
+.scroll-hint span{
+  font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+  color:rgba(255,255,255,0.2);writing-mode:vertical-rl;
+}
+.scroll-line{
+  width:1px;height:56px;
+  background:linear-gradient(to bottom,rgba(29,185,84,.7),transparent);
+  animation:scrollAnim 2s ease infinite;
+}
+@keyframes scrollAnim{
+  0%{transform:scaleY(0);transform-origin:top}
+  49%{transform:scaleY(1);transform-origin:top}
+  50%{transform-origin:bottom}
+  100%{transform:scaleY(0);transform-origin:bottom}
+}
+
+/* MARQUEE */
+.marquee-wrap{
+  overflow:hidden;background:#000;
+  border-top:1px solid rgba(255,255,255,0.04);
+  border-bottom:1px solid rgba(255,255,255,0.04);
+  padding:18px 0;
+}
+.marquee{display:flex;animation:marquee 28s linear infinite}
+.marquee-item{
+  display:flex;align-items:center;gap:18px;
+  padding:0 36px;flex-shrink:0;
+}
+.marquee-item span{
+  font-family:'Syne',sans-serif;font-size:12px;font-weight:700;
+  letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(255,255,255,0.16);white-space:nowrap;
+}
+.mdot{width:5px;height:5px;border-radius:50%;background:var(--green);opacity:.65;flex-shrink:0}
+@keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* ABOUT — two column */
+.about{
+  padding:140px 56px;
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:80px;align-items:center;
+  max-width:1280px;margin:0 auto;
+}
+.eyebrow{
+  font-size:11px;font-weight:700;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--green);margin-bottom:20px;
+}
+.about-title{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(34px,4vw,50px);font-weight:800;
+  line-height:1.08;letter-spacing:-1.5px;margin-bottom:22px;
+}
+.about-body{
+  font-size:16px;color:rgba(255,255,255,0.4);
+  line-height:1.8;margin-bottom:44px;max-width:420px;
+}
+.about-stats{display:flex;gap:44px}
+.astat-num{
+  font-family:'Syne',sans-serif;font-size:42px;font-weight:800;
+  color:var(--green);letter-spacing:-2px;line-height:1;
+}
+.astat-label{font-size:12px;color:rgba(255,255,255,0.32);letter-spacing:.5px;margin-top:5px}
+
+/* poster stack */
+.poster-stack{position:relative;height:480px}
+.stack-card{
+  position:absolute;border-radius:12px;overflow:hidden;
+  box-shadow:0 30px 80px rgba(0,0,0,0.8);
+}
+.stack-card img{width:100%;height:100%;object-fit:cover;display:block}
+.stack-card:nth-child(1){width:230px;height:330px;right:10px;top:20px;transform:rotate(5deg);opacity:.4;filter:brightness(.55)}
+.stack-card:nth-child(2){width:255px;height:365px;right:55px;top:55px;transform:rotate(-2.5deg);opacity:.7;filter:brightness(.72)}
+.stack-card:nth-child(3){width:275px;height:395px;right:100px;top:38px;z-index:3}
+.stack-card:nth-child(4){width:195px;height:270px;left:0;bottom:0;transform:rotate(-6deg);opacity:.5;filter:brightness(.55)}
+
+/* FEATURES */
+.features{padding:0 56px 140px;max-width:1280px;margin:0 auto}
+.features-header{margin-bottom:52px}
+.features-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(38px,5vw,62px);font-weight:900;
+  font-style:italic;letter-spacing:-1px;line-height:1.05;
+}
+
+.feat-grid{
+  display:grid;
+  grid-template-columns:2fr 1fr 1fr;
+  grid-template-rows:auto auto;
+  gap:3px;border-radius:14px;overflow:hidden;
+}
+.feat-card{
+  background:#0c0c0c;padding:44px 40px;
+  position:relative;overflow:hidden;transition:background .3s;
+}
+.feat-card:hover{background:#101010}
+.feat-card::after{
+  content:'';position:absolute;top:-80px;left:-80px;
+  width:220px;height:220px;
+  background:radial-gradient(circle,rgba(29,185,84,0.07),transparent 70%);
+  opacity:0;transition:opacity .4s;
+}
+.feat-card:hover::after{opacity:1}
+.feat-card.large{grid-row:span 2}
+.feat-icon{font-size:30px;margin-bottom:26px;display:block}
+.feat-card h3{
+  font-family:'Syne',sans-serif;font-size:19px;
+  font-weight:700;letter-spacing:-.3px;margin-bottom:12px;
+}
+.feat-card p{font-size:14px;color:rgba(255,255,255,0.36);line-height:1.75;max-width:300px}
+.feat-poster{margin-top:30px;border-radius:8px;overflow:hidden;height:210px}
+.feat-poster img{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.65) saturate(.75)}
+
+/* in-card quote */
+.feat-quote{
+  margin-top:32px;
+  padding:28px 28px 24px;
+  border-radius:10px;
+  background:rgba(29,185,84,0.05);
+  border:1px solid rgba(29,185,84,0.12);
+  position:relative;
+}
+.feat-quote-mark{
+  font-family:'Playfair Display',serif;
+  font-size:72px;line-height:.5;
+  color:var(--green);opacity:.35;
+  display:block;margin-bottom:14px;
+}
+.feat-quote-text{
+  font-family:'Playfair Display',serif;
+  font-size:17px;font-weight:900;font-style:italic;
+  line-height:1.5;color:rgba(255,255,255,0.75);
+  margin-bottom:14px;letter-spacing:-.2px;
+}
+.feat-quote-attr{
+  font-size:11px;color:var(--green);
+  letter-spacing:.12em;text-transform:uppercase;font-weight:600;
+}
+
+/* CTA */
+.cta-section{
+  padding:140px 56px;text-align:center;
+  position:relative;overflow:hidden;
+}
+.cta-section::before{
+  content:'';position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);width:800px;height:500px;
+  background:radial-gradient(ellipse,rgba(29,185,84,0.09) 0%,transparent 65%);
+  pointer-events:none;
+}
+.cta-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(46px,7vw,94px);font-weight:900;
+  letter-spacing:-2.5px;line-height:.95;margin-bottom:30px;
+}
+.cta-title em{font-style:italic;color:var(--green)}
+.cta-sub{
+  font-size:17px;color:rgba(255,255,255,0.36);
+  margin:0 auto 48px;line-height:1.75;max-width:400px;
+}
+
+/* FOOTER */
+footer{
+  border-top:1px solid var(--border);
+  padding:34px 56px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.footer-logo{
+  font-family:'Syne',sans-serif;font-size:16px;
+  font-weight:800;color:var(--green);letter-spacing:4px;
+}
+.footer-copy{font-size:13px;color:rgba(255,255,255,0.18)}
+
+/* ANIMATIONS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+.reveal{opacity:0;transform:translateY(40px);transition:opacity .9s ease,transform .9s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.rd1{transition-delay:.15s}
+.rd2{transition-delay:.3s}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="logo">RevPlay</div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="collage" id="collage"></div>
+  <div class="collage-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-badge"><span class="badge-dot"></span>Now Streaming · 50M+ Tracks</div>
+    <h1 class="hero-title">
+      Feel the<br>
+      <span class="title-green">Music.</span><br>
+      <span class="title-outline">Live It.</span>
+    </h1>
+    <p class="hero-sub">Stream millions of songs. Discover artists rising from every corner of India and beyond. RevPlay is music, cinematic.</p>
+    <div class="hero-cta">
+      <a href="/register" class="btn-primary">Start Listening Free</a>
+      <a href="/login" class="btn-ghost">
+        Already a member?
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <div class="scroll-line"></div>
+    <span>Scroll</span>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee" id="marquee"></div>
+</div>
+
+<!-- ABOUT -->
+<div class="about reveal">
+  <div class="about-text">
+    <p class="eyebrow">About RevPlay</p>
+    <h2 class="about-title">Music deserves a cinematic stage.</h2>
+    <p class="about-body">We built RevPlay for listeners who feel music deeply — where every song is a scene, every album a film. Stream, discover, and live inside the sound.</p>
+    <div class="about-stats">
+      <div><div class="astat-num">50M+</div><div class="astat-label">Songs</div></div>
+      <div><div class="astat-num">2M+</div><div class="astat-label">Artists</div></div>
+      <div><div class="astat-num">190+</div><div class="astat-label">Countries</div></div>
+    </div>
+  </div>
+  <div class="poster-stack" id="posterStack"></div>
+</div>
+
+<!-- FEATURES -->
+<section class="features">
+  <div class="features-header reveal">
+    <p class="eyebrow">What we offer</p>
+    <h2 class="features-title">Every feature<br>you need.</h2>
+  </div>
+  <div class="feat-grid reveal rd1">
+    <div class="feat-card large">
+      <span class="feat-icon">🎵</span>
+      <h3>Unlimited Streaming</h3>
+      <p>Every track, every album, every artist — no limits, no interruptions. Music the way it was meant to be heard.</p>
+      <div class="feat-quote">
+        <span class="feat-quote-mark">"</span>
+        <p class="feat-quote-text">Music is the soundtrack of your life.</p>
+        <p class="feat-quote-attr">— Johnny Cash</p>
+      </div>
+    </div>
+    <div class="feat-card">
+      <span class="feat-icon">🎧</span>
+      <h3>Hi-Fi Audio</h3>
+      <p>Crystal clear playback. Every note, every breath, every silence.</p>
+    </div>
+    <div class="feat-card">
+      <span class="feat-icon">🔥</span>
+      <h3>Trending Now</h3>
+      <p>Real-time charts updated daily. Never miss what's breaking.</p>
+    </div>
+    <div class="feat-card">
+      <span class="feat-icon">📻</span>
+      <h3>Smart Radio</h3>
+      <p>Curated stations that learn your taste and grow with you.</p>
+    </div>
+    <div class="feat-card">
+      <span class="feat-icon">🎤</span>
+      <h3>Discover Artists</h3>
+      <p>Surface independent talent before the world finds them.</p>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- CTA -->
+<section class="cta-section reveal">
+  <h2 class="cta-title">Your story<br>starts with a <em>song.</em></h2>
+  <p class="cta-sub">Join millions of listeners who made RevPlay their home for music.</p>
+  <a href="/register" class="btn-primary">Create Free Account</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">RevPlay</div>
+  <div class="footer-copy">© 2026 RevPlay. All rights reserved.</div>
+</footer>
+
+<script>
+const posters = [
+  "/uploads/album/1773033375592_dhurandhar.jpg",
+  "/uploads/album/1773035863925_peddi.jpg",
+  "/uploads/album/1773039448752_beast_2022_.jpg",
+  "/uploads/album/1773079317331_dookudu.jpg",
+  "/uploads/album/1773092041715_businessman.jpg",
+  "/uploads/album/Guru_2007_poster.jpg",
+  "/uploads/album/leo.jpg",
+  "/uploads/album/1n.jpg",
+  "/uploads/album/salaar.jpg",
+  "/uploads/album/rangasthalam.jpg",
+  "/uploads/album/avpl.jpg",
+  "/uploads/album/athadu.jpg",
+  "/uploads/album/tamasha.jpg",
+  "/uploads/album/pokiri.jpg",
+  "/uploads/album/pushpa.jpg",
+  "/uploads/album/kgf.jpg",
+  "/uploads/album/3_idiots.jpg", 
+  "/uploads/album/chichhore.jpg",
+  "/uploads/album/master.jpg",
+  "/uploads/album/varanasi.jpg",
+  "/uploads/album/vikram.jpg",
+  "/uploads/album/rrr.jpg",
+  "/uploads/album/doctor.jpg",
+  "/uploads/album/bmb.jpg",
+  "/uploads/album/lagaan.jpg",
+  "/uploads/album/srm.jpg",
+  "/uploads/album/khaleja.jpg",
+];
+
+const shuffled = [...posters].sort(()=>Math.random()-.5);
+
+/* Hero collage — 21 tiles */
+const collage = document.getElementById('collage');
+for(let i=0;i<21;i++){
+  const tile=document.createElement('div'); tile.className='collage-tile';
+  const img=document.createElement('img'); img.src=shuffled[i%shuffled.length]; img.alt='';
+  tile.appendChild(img); collage.appendChild(tile);
+}
+
+/* Poster stack */
+const stack=document.getElementById('posterStack');
+[3,2,1,0].forEach(i=>{
+  const card=document.createElement('div'); card.className='stack-card';
+  const img=document.createElement('img'); img.src=shuffled[i]; img.alt='';
+  card.appendChild(img); stack.appendChild(card);
+});
+
+/* Marquee */
+const words=['Unlimited Music','New Releases Daily','Artist Spotlights',
+  'Hi-Fi Audio','Smart Playlists','Live Sessions','Trending Charts','Every Genre','Discover More'];
+const mq=document.getElementById('marquee');
+[...words,...words,...words,...words].forEach(w=>{
+  const el=document.createElement('div'); el.className='marquee-item';
+  el.innerHTML=`<div class="mdot"></div><span>${w}</span>`;
+  mq.appendChild(el);
+});
+
+/* Nav scroll */
+window.addEventListener('scroll',()=>{
+  document.getElementById('nav').classList.toggle('scrolled',window.scrollY>60);
+});
+
+/* Reveal */
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')});
+},{threshold:0.1});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+</script>
+</body>
+</html>

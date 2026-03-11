@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title th:text="${song.title} + ' — RevPlay'">Song</title>
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#0f0f0f; --bg2:#1a1a2e; --surface:#1e1e2f; --surface2:#24243a;
+      --green:#1db954; --green-dim:rgba(29,185,84,0.12);
+      --text:#ffffff; --muted:#8888a8; --border:rgba(255,255,255,0.06);
+      --player-h:88px;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background:linear-gradient(135deg,var(--bg),var(--bg2));
+      color:var(--text); font-family:'Outfit',sans-serif;
+      min-height:100vh; padding-bottom:var(--player-h);
+    }
+
+    /* NAV */
+    nav {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:18px 60px; background:rgba(0,0,0,0.5);
+      backdrop-filter:blur(20px); border-bottom:1px solid var(--border);
+      position:sticky; top:0; z-index:100;
+    }
+    .logo { font-size:22px; font-weight:800; color:var(--green); letter-spacing:3px; text-transform:uppercase; text-decoration:none; }
+    .nav-right a { margin-left:28px; text-decoration:none; color:var(--muted); font-size:15px; font-weight:500; transition:color .2s; }
+    .nav-right a:hover { color:var(--text); }
+
+    /* PAGE — centred Spotify column */
+    .page {
+      max-width:460px; margin:0 auto;
+      padding:48px 24px 40px;
+      display:flex; flex-direction:column; align-items:center;
+    }
+    .back {
+      align-self:flex-start; color:var(--green); text-decoration:none;
+      font-size:14px; font-weight:600; margin-bottom:40px;
+      opacity:.8; transition:opacity .2s;
+    }
+    .back:hover { opacity:1; }
+
+    /* BIG ART — Spotify centrepiece */
+    .big-art {
+      width:100%; aspect-ratio:1; border-radius:20px; overflow:hidden;
+      background:linear-gradient(135deg,#1db954,#0a3d1f);
+      display:flex; align-items:center; justify-content:center;
+      font-size:100px; flex-shrink:0;
+      box-shadow:0 40px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.05);
+      margin-bottom:40px;
+      animation:rise .45s ease both;
+    }
+    .big-art img { width:100%; height:100%; object-fit:fill; display:block; }
+
+    /* SONG INFO ROW */
+    .song-info { width:100%; display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; }
+    .song-info h1 { font-size:26px; font-weight:800; letter-spacing:-.02em; }
+    .song-info .artist { font-size:15px; color:var(--muted); font-weight:500; margin-top:5px; }
+
+    /* META PILLS */
+    .meta-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:28px; width:100%; }
+    .meta-pill {
+      background:rgba(255,255,255,0.05); border:1px solid var(--border);
+      border-radius:100px; padding:5px 13px; font-size:12px; color:var(--muted);
+    }
+    .meta-pill b { color:var(--text); font-weight:600; }
+
+    /* PROGRESS */
+    .progress-wrap {
+      width:100%; padding:8px 0; cursor:pointer;
+      --filled:0%;
+    }
+    .progress-track {
+      width:100%; height:4px; background:rgba(255,255,255,0.1);
+      border-radius:100px; position:relative;
+      transition:height .15s;
+    }
+    .progress-wrap:hover .progress-track { height:6px; }
+    .progress-fill {
+      height:100%; background:var(--green); border-radius:100px;
+      width:var(--filled); position:relative; pointer-events:none;
+      transition:width .1s linear;
+    }
+    .progress-fill::after {
+      content:''; position:absolute; right:-7px; top:50%; transform:translateY(-50%);
+      width:14px; height:14px; background:#fff; border-radius:50%;
+      opacity:0; transition:opacity .15s;
+    }
+    .progress-wrap:hover .progress-fill::after { opacity:1; }
+    .time-row {
+      display:flex; justify-content:space-between;
+      font-size:11px; color:var(--muted); font-weight:500;
+      margin-top:4px; margin-bottom:28px; width:100%;
+    }
+
+    /* CONTROLS — centred like Spotify */
+    .controls {
+      display:flex; align-items:center; justify-content:center;
+      gap:32px; width:100%; margin-bottom:28px;
+    }
+    .ctrl-btn {
+      background:none; border:none; color:var(--muted); cursor:pointer;
+      font-size:22px; padding:6px; border-radius:50%;
+      transition:color .2s, transform .15s;
+    }
+    .ctrl-btn:hover { color:var(--text); transform:scale(1.12); }
+    .btn-play-main {
+      width:64px; height:64px; border-radius:50%; border:none;
+      background:#fff; color:#000; cursor:pointer;
+      display:flex; align-items:center; justify-content:center; font-size:24px;
+      transition:transform .15s, background .15s;
+      box-shadow:0 8px 32px rgba(0,0,0,0.5);
+    }
+    .btn-play-main:hover { transform:scale(1.06); background:#e8e8e8; }
+
+    /* VOLUME ROW */
+    .volume-row { display:flex; align-items:center; gap:12px; width:100%; }
+    .vol-icon { background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px; transition:color .2s; }
+    .vol-icon:hover { color:var(--text); }
+    .vol-slider-wrap {
+      flex:1; height:4px; background:rgba(255,255,255,0.1);
+      border-radius:100px; cursor:pointer; position:relative;
+    }
+    .vol-slider-fill { height:100%; background:var(--muted); border-radius:100px; width:100%; pointer-events:none; transition:background .2s; }
+    .volume-row:hover .vol-slider-fill { background:var(--green); }
+
+    /*
+       PERSISTENT BOTTOM PLAYER
+ */
+    #bp {
+      position:fixed; bottom:0; left:0; right:0; height:var(--player-h);
+      z-index:500;
+      background:rgba(10,10,20,0.97);
+      backdrop-filter:blur(28px);
+      border-top:1px solid var(--border);
+      display:grid;
+      grid-template-columns:280px 1fr 280px;
+      align-items:center;
+      padding:0 24px;
+    }
+    /* green progress stripe at very top of bar */
+    #bp::before {
+      content:''; position:absolute; top:0; left:0;
+      height:2px; background:var(--green);
+      width:var(--bp-pct,0%); transition:width .1s linear;
+    }
+
+    /* LEFT: art + info */
+    .bp-left { display:flex; align-items:center; gap:14px; min-width:0; }
+    .bp-art {
+      width:54px; height:54px; border-radius:8px; flex-shrink:0;
+      background:linear-gradient(135deg,#1db954,#0a3d1f);
+      display:flex; align-items:center; justify-content:center;
+      font-size:22px; overflow:hidden;
+    }
+    .bp-art img { width:100%; height:100%; object-fit:cover; border-radius:8px; }
+    .bp-title { font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .bp-artist { font-size:12px; color:var(--muted); margin-top:2px; }
+
+    /* CENTRE: controls + seek */
+    .bp-center { display:flex; flex-direction:column; align-items:center; gap:6px; }
+    .bp-btns { display:flex; align-items:center; gap:20px; }
+    .bp-btn {
+      background:none; border:none; color:var(--muted); cursor:pointer;
+      font-size:16px; transition:color .2s; padding:4px;
+    }
+    .bp-btn:hover { color:var(--text); }
+    .bp-play-btn {
+      width:36px; height:36px; border-radius:50%; border:none;
+      background:#fff; color:#000; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      font-size:14px; transition:transform .15s, background .15s;
+    }
+    .bp-play-btn:hover { transform:scale(1.07); background:#e8e8e8; }
+    .bp-seek { display:flex; align-items:center; gap:8px; width:360px; font-size:11px; color:var(--muted); }
+    .bp-bar { flex:1; height:3px; background:rgba(255,255,255,0.12); border-radius:100px; cursor:pointer; }
+    .bp-bar-fill { height:100%; background:var(--green); border-radius:100px; width:0%; pointer-events:none; }
+
+    /* RIGHT: volume */
+    .bp-right { display:flex; align-items:center; justify-content:flex-end; gap:10px; }
+    .bp-vol-btn { background:none; border:none; color:var(--muted); cursor:pointer; font-size:15px; transition:color .2s; }
+    .bp-vol-btn:hover { color:var(--text); }
+    input[type=range].bp-vol {
+      -webkit-appearance:none; width:90px; height:3px;
+      background:rgba(255,255,255,0.15); border-radius:100px;
+      cursor:pointer; outline:none;
+    }
+    input[type=range].bp-vol::-webkit-slider-thumb {
+      -webkit-appearance:none; width:12px; height:12px;
+      background:#fff; border-radius:50%;
+    }
+
+    @keyframes rise { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    
+    /* FAVORITE BUTTON */
+.fav-btn{
+  background:none;
+  border:none;
+  font-size:26px;
+  cursor:pointer;
+  color:var(--muted);
+  transition:transform .15s,color .2s;
+}
+
+.fav-btn:hover{
+  transform:scale(1.15);
+  color:var(--text);
+}
+
+.fav-btn.active{
+  color:#1db954;
+}
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/home">RevPlay</a>
+</nav>
+
+<div class="page">
+  <a href="javascript:history.back()" class="back">← Back</a>
+
+  <!-- BIG CENTRED ART -->
+  <div class="big-art">
+    <img th:if="${song.album != null and song.album.coverImage != null}"
+         th:src="${song.album.coverImage}" alt="cover">
+    <span th:if="${song.album == null or song.album.coverImage == null}">♪</span>
+  </div>
+
+  <!-- SONG INFO -->
+<div class="song-info">
+  <div>
+    <h1 th:text="${song.title}">Title</h1>
+    <p class="artist" th:text="${song.artist.artistName}">Artist</p>
+  </div>
+
+  <!-- FAVORITE HEART -->
+  <button id="favoriteBtn" class="fav-btn" title="Add to favorites">
+    ♡
+  </button>
+</div>
+
+  <!-- META PILLS -->
+  <div class="meta-row">
+    <div class="meta-pill">Genre: <b th:text="${song.genre ?: '—'}"></b></div>
+    <div class="meta-pill">Duration: <b th:text="${song.duration != null ? song.duration + 's' : '—'}"></b></div>
+    <div class="meta-pill">Plays: <b id="playCountDisplay" th:text="${song.playCount}"></b></div>
+    <div class="meta-pill" th:if="${song.releaseDate != null}">Released: <b th:text="${song.releaseDate}"></b></div>
+    <div class="meta-pill" th:if="${song.album != null}">Album: <b th:text="${song.album.title}"></b></div>
+  </div>
+
+
+<!-- Song data carrier for JS -->
+<div id="songMeta" style="display:none"
+     th:attr="data-src=${song.audioFilePath},
+              data-id=${song.songId},
+              data-title=${song.title},
+              data-artist=${song.artist.artistName},
+              data-cover=${song.album != null and song.album.coverImage != null ? song.album.coverImage : ''}">
+</div>
+
+<!-- ══ PERSISTENT BOTTOM PLAYER (same block goes on every page) ══ -->
+<div id="bp">
+  <!-- LEFT -->
+  <div class="bp-left">
+    <div class="bp-art" id="bpArt">♪</div>
+    <div>
+      <div class="bp-title" id="bpTitle">No song playing</div>
+      <div class="bp-artist" id="bpArtist">—</div>
+    </div>
+  </div>
+
+  <!-- CENTRE -->
+  <div class="bp-center">
+    <div class="bp-btns">
+      <button class="bp-btn" id="bpRew">⏮</button>
+      <button class="bp-play-btn" id="bpPlay">▶</button>
+      <button class="bp-btn" id="bpFwd">⏭</button>
+    </div>
+    <div class="bp-seek">
+      <span id="bpCur">0:00</span>
+      <div class="bp-bar" id="bpBar"><div class="bp-bar-fill" id="bpFill"></div></div>
+      <span id="bpDur">0:00</span>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="bp-right">
+    <button class="bp-vol-btn" id="bpVolBtn">🔊</button>
+    <input type="range" class="bp-vol" id="bpVolSlider" min="0" max="1" step="0.02" value="1">
+  </div>
+</div>
+
+<audio id="globalAudio" style="display:none"></audio>
+
+<script>
+(function () {
+  /* ── Elements ── */
+  const audio    = document.getElementById('globalAudio');
+  const meta     = document.getElementById('songMeta');
+  const seekWrap = document.getElementById('seekWrap');
+  const seekFill = document.getElementById('seekFill');
+  const timeCur  = document.getElementById('timeCur');
+  const timeDur  = document.getElementById('timeDur');
+  const btnPlay  = document.getElementById('btnPlay');
+  const btnRew   = document.getElementById('btnRew');
+  const btnFwd   = document.getElementById('btnFwd');
+  const btnMute  = document.getElementById('btnMute');
+  const volTrack = document.getElementById('volTrack');
+  const volFill  = document.getElementById('volFill');
+  const bp       = document.getElementById('bp');
+  const bpPlay   = document.getElementById('bpPlay');
+  const bpRew    = document.getElementById('bpRew');
+  const bpFwd    = document.getElementById('bpFwd');
+  const bpFill   = document.getElementById('bpFill');
+  const bpCur    = document.getElementById('bpCur');
+  const bpDur    = document.getElementById('bpDur');
+  const bpBar    = document.getElementById('bpBar');
+  const bpVolBtn = document.getElementById('bpVolBtn');
+  const bpVolSl  = document.getElementById('bpVolSlider');
+  const bpTitle  = document.getElementById('bpTitle');
+  const bpArtist = document.getElementById('bpArtist');
+  const bpArtEl  = document.getElementById('bpArt');
+  const favBtn   = document.getElementById('favoriteBtn');
+
+  function fmt(s) {
+    if (!s || isNaN(s)) return '0:00';
+    return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+  }
+
+  /* ── State ── */
+  let state = {};
+  try { state = JSON.parse(sessionStorage.getItem('revplay_player') || '{}'); } catch(e){}
+
+  /* ── Favourite helpers── */
+  let isFavorited = false;
+
+  function getUserIdFromJWT() {
+    const jwt = document.cookie.split('; ').find(r => r.startsWith('jwt='))?.split('=')[1];
+    if (!jwt) return null;
+    try { return JSON.parse(atob(jwt.split('.')[1])).userId; } catch(e) { return null; }
+  }
+
+  function checkFavoriteState() {
+    if (!favBtn) return;
+    const userId = getUserIdFromJWT();
+    const songId = state.songId;
+    if (!userId || !songId) return;
+    fetch(`/favorites/user/${userId}`)
+      .then(r => r.json())
+      .then(list => {
+        const found = list.some(f => f.song.songId == songId);
+        if (found) {
+          isFavorited = true;
+          favBtn.textContent = '♥';
+          favBtn.classList.add('active');
+        }
+      }).catch(() => {});
+  }
+
+  function toggleFavorite() {
+    const userId = getUserIdFromJWT();
+    const songId = state.songId;
+    if (!userId || !songId) return;
+    if (!isFavorited) {
+      fetch(`/favorites/add?userId=${userId}&songId=${songId}`, { method: 'POST' })
+        .then(r => r.json())
+        .then(() => {
+          isFavorited = true;
+          favBtn.textContent = '♥';
+          favBtn.classList.add('active');
+        }).catch(() => {});
+    } else {
+      fetch(`/favorites/remove?userId=${userId}&songId=${songId}`, { method: 'DELETE' })
+        .then(() => {
+          isFavorited = false;
+          favBtn.textContent = '♡';
+          favBtn.classList.remove('active');
+        }).catch(() => {});
+    }
+  }
+
+  favBtn?.addEventListener('click', toggleFavorite);
+
+  /* ── Audio helpers ── */
+  function populateBottomBar(s) {
+    bpTitle.textContent  = s.title  || 'No song playing';
+    bpArtist.textContent = s.artist || '—';
+    bpArtEl.innerHTML    = s.cover  ? `<img src="${s.cover}">` : '♪';
+  }
+
+  function loadAudio(s, autoplay) {
+    audio.src     = s.src;
+    audio.volume  = s.volume ?? 1;
+    bpVolSl.value = audio.volume;
+    populateBottomBar(s);
+    if (audio.readyState >= 1) {
+      if (s.currentTime) audio.currentTime = s.currentTime;
+      timeDur.textContent = fmt(audio.duration);
+      bpDur.textContent   = fmt(audio.duration);
+      if (autoplay) audio.play().catch(() => {});
+    } else {
+      audio.addEventListener('loadedmetadata', () => {
+        if (s.currentTime) audio.currentTime = s.currentTime;
+        timeDur.textContent = fmt(audio.duration);
+        bpDur.textContent   = fmt(audio.duration);
+        if (autoplay) audio.play().catch(() => {});
+      }, { once: true });
+    }
+  }
+
+  function saveState() {
+    sessionStorage.setItem('revplay_player', JSON.stringify({
+      src: audio.src, title: bpTitle.textContent, artist: bpArtist.textContent,
+      cover: state.cover || '', songId: state.songId,
+      currentTime: audio.currentTime, volume: audio.volume, playing: !audio.paused
+    }));
+  }
+
+  /* ── Load song or restore session ── */
+  if (meta && meta.dataset.src) {
+    const d = meta.dataset;
+    const isSameSong = state.songId === d.id;
+    state = {
+      src: d.src, title: d.title, artist: d.artist, cover: d.cover,
+      songId: d.id, currentTime: isSameSong ? (state.currentTime || 0) : 0,
+      volume: state.volume ?? 1, playing: true
+    };
+    sessionStorage.setItem('revplay_player', JSON.stringify(state));
+    loadAudio(state, true);
+    checkFavoriteState();          // safe — defined above
+  } else {
+    if (state.src) loadAudio(state, state.playing);
+  }
+
+  /* ── Time update ── */
+audio.addEventListener('timeupdate', () => {
+  if (!audio.duration) return;
+
+  const pct = (audio.currentTime / audio.duration) * 100;
+
+  if (seekFill) seekFill.style.width = pct + '%';
+
+  if (bpFill) bpFill.style.width = pct + '%';
+
+  if (bp) bp.style.setProperty('--bp-pct', pct + '%');
+
+  if (timeCur) timeCur.textContent = fmt(audio.currentTime);
+
+  if (bpCur) bpCur.textContent = fmt(audio.currentTime);
+
+  saveState();
+});
+
+audio.addEventListener('loadedmetadata', () => {
+
+	  if (timeDur) timeDur.textContent = fmt(audio.duration);
+
+	  if (bpDur) bpDur.textContent = fmt(audio.duration);
+
+	});
+
+  function syncPlayIcons(playing) {
+    const icon = playing ? '❚❚' : '▶';
+    if (btnPlay) btnPlay.textContent = icon;
+    if (bpPlay)  bpPlay.textContent  = icon;
+  }
+  audio.addEventListener('play',  () => { syncPlayIcons(true);  saveState(); });
+  audio.addEventListener('pause', () => { syncPlayIcons(false); saveState(); });
+  audio.addEventListener('ended', () => { syncPlayIcons(false); saveState(); });
+
+  function togglePlay() { audio.paused ? audio.play() : audio.pause(); }
+  btnPlay?.addEventListener('click', togglePlay);
+  bpPlay?.addEventListener('click',  togglePlay);
+
+  function skip(sec) { audio.currentTime = Math.max(0, Math.min(audio.duration || 0, audio.currentTime + sec)); }
+  btnRew?.addEventListener('click', () => skip(-10));
+  btnFwd?.addEventListener('click', () => skip(+10));
+  bpRew?.addEventListener('click',  () => skip(-10));
+  bpFwd?.addEventListener('click',  () => skip(+10));
+
+  seekWrap?.addEventListener('click', e => {
+    if (!audio.duration) return;
+    const r = seekWrap.querySelector('.progress-track').getBoundingClientRect();
+    audio.currentTime = ((e.clientX - r.left) / r.width) * audio.duration;
+  });
+
+  bpBar?.addEventListener('click', e => {
+    if (!audio.duration) return;
+    const r = bpBar.getBoundingClientRect();
+    audio.currentTime = ((e.clientX - r.left) / r.width) * audio.duration;
+  });
+
+  /* Volume */
+  let lastVol = 1;
+  function setVol(v) {
+    audio.volume = Math.max(0, Math.min(1, v));
+    bpVolSl.value = audio.volume;
+    if (volFill) volFill.style.width = (audio.volume * 100) + '%';
+    const icon = audio.volume === 0 ? '🔇' : audio.volume < .5 ? '🔉' : '🔊';
+    if (btnMute)  btnMute.textContent  = icon;
+    if (bpVolBtn) bpVolBtn.textContent = icon;
+  }
+  volTrack?.addEventListener('click', e => {
+    const r = volTrack.getBoundingClientRect();
+    setVol((e.clientX - r.left) / r.width);
+  });
+  bpVolSl?.addEventListener('input', e => setVol(parseFloat(e.target.value)));
+  function toggleMute() { audio.volume > 0 ? (lastVol = audio.volume, setVol(0)) : setVol(lastVol); }
+  btnMute?.addEventListener('click',  toggleMute);
+  bpVolBtn?.addEventListener('click', toggleMute);
+
+  /* Record play history */
+  let recorded = false;
+  audio.addEventListener('play', () => {
+    if (recorded) return; recorded = true;
+    const jwt = document.cookie.split('; ').find(r => r.startsWith('jwt='))?.split('=')[1];
+    if (!jwt || !state.songId) return;
+    try {
+      const p = JSON.parse(atob(jwt.split('.')[1]));
+      fetch('/history/play', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: p.userId, songId: parseInt(state.songId) })
+      });
+    } catch(e) {}
+  });
+
+})();
+</script>
+
+</body>
+</html>

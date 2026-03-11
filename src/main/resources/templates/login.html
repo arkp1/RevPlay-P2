@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>RevPlay - Login</title>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --green:#1db954;
+  --green-light:#1ed760;
+  --bg:#0a0a0a;
+  --card:#111111;
+  --border:rgba(255,255,255,0.08);
+  --text:#ffffff;
+  --muted:#6b6b80;
+}
+
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--bg);
+  display:flex;
+  min-height:100vh;
+  overflow:hidden;
+}
+
+/* ── LEFT PANEL ── */
+.left{
+  width:420px;
+  min-width:420px;
+  background:var(--bg);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding:56px 48px;
+  position:relative;
+  z-index:10;
+}
+
+.left::after{
+  content:'';
+  position:absolute;
+  right:0;top:0;bottom:0;
+  width:1px;
+  background:linear-gradient(to bottom,transparent,var(--border) 20%,var(--border) 80%,transparent);
+}
+
+.logo{
+  font-family:'Syne',sans-serif;
+  font-size:22px;
+  font-weight:800;
+  color:var(--green);
+  letter-spacing:4px;
+  text-transform:uppercase;
+  margin-bottom:48px;
+}
+
+.heading{
+  font-family:'Syne',sans-serif;
+  font-size:28px;
+  font-weight:700;
+  color:var(--text);
+  line-height:1.2;
+  margin-bottom:8px;
+}
+
+.subheading{
+  font-size:14px;
+  color:var(--muted);
+  margin-bottom:36px;
+}
+
+/* Google btn */
+.google-btn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  width:100%;
+  padding:12px 20px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,0.04);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  font-size:14px;
+  font-weight:500;
+  cursor:pointer;
+  transition:background .2s,border-color .2s;
+  margin-bottom:20px;
+}
+.google-btn:hover{
+  background:rgba(255,255,255,0.08);
+  border-color:rgba(255,255,255,0.18);
+}
+.google-btn svg{width:18px;height:18px;flex-shrink:0}
+
+.divider{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:24px;
+}
+.divider::before,.divider::after{
+  content:'';flex:1;
+  height:1px;
+  background:var(--border);
+}
+.divider span{
+  font-size:12px;
+  color:var(--muted);
+}
+
+label{
+  display:block;
+  font-size:12px;
+  color:rgba(255,255,255,0.7);
+  margin-bottom:7px;
+  letter-spacing:.4px;
+  text-transform:uppercase;
+}
+
+.input-wrap{
+  position:relative;
+  margin-bottom:18px;
+}
+
+input[type=text],input[type=password],input[type=email]{
+  width:100%;
+  padding:12px 16px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,0.03);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  font-size:14px;
+  outline:none;
+  transition:border-color .2s,background .2s;
+}
+input:focus{
+  border-color:rgba(29,185,84,.5);
+  background:rgba(29,185,84,.04);
+}
+input::placeholder{color:rgba(255,255,255,0.2)}
+
+.forgot-row{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:-10px;
+  margin-bottom:22px;
+}
+.forgot-row a{
+  font-size:12px;
+  color:var(--green);
+  text-decoration:none;
+  cursor:pointer;
+}
+.forgot-row a:hover{text-decoration:underline}
+
+.submit-btn{
+  width:100%;
+  padding:13px;
+  border:none;
+  border-radius:10px;
+  background:var(--green);
+  color:#000;
+  font-family:'Syne',sans-serif;
+  font-size:15px;
+  font-weight:700;
+  letter-spacing:.5px;
+  cursor:pointer;
+  transition:background .2s,transform .1s;
+  margin-bottom:20px;
+}
+.submit-btn:hover{background:var(--green-light)}
+.submit-btn:active{transform:scale(.98)}
+
+.bottom-link{
+  text-align:center;
+  font-size:13px;
+  color:var(--muted);
+}
+.bottom-link a{
+  color:var(--green);
+  text-decoration:none;
+  font-weight:500;
+  cursor:pointer;
+}
+
+.error{color:#ff5c5c;font-size:13px;text-align:center;margin-top:10px;min-height:18px}
+.success{color:var(--green);font-size:13px;text-align:center;margin-top:10px}
+.hidden{display:none!important}
+
+/* ── RIGHT MOSAIC PANEL ── */
+.right{
+  flex:1;
+  overflow:hidden;
+  position:relative;
+  background:#050505;
+}
+
+/* left fade */
+.right::before{
+  content:'';
+  position:absolute;
+  left:0;top:0;bottom:0;
+  width:100px;
+  background:linear-gradient(to right,var(--bg),transparent);
+  z-index:5;
+  pointer-events:none;
+}
+
+/* diagonal wrapper — rotate the whole mosaic ~-15deg so columns scroll diagonally */
+.mosaic-wrap{
+  position:absolute;
+  inset:-40% -20%;
+  transform:rotate(-15deg);
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+}
+
+.col{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  flex:1;
+  min-width:160px;
+}
+
+.col:nth-child(1) .inner{ animation:scrollUp   32s linear infinite; }
+.col:nth-child(2) .inner{ animation:scrollDown 38s linear infinite; }
+.col:nth-child(3) .inner{ animation:scrollUp   28s linear infinite; }
+.col:nth-child(4) .inner{ animation:scrollDown 35s linear infinite; }
+.col:nth-child(5) .inner{ animation:scrollUp   42s linear infinite; }
+.col:nth-child(6) .inner{ animation:scrollDown 30s linear infinite; }
+
+.inner{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.tile{
+  border-radius:10px;
+  overflow:hidden;
+  flex-shrink:0;
+  width:100%;
+}
+
+/* images always fully visible — no overlay, no hover darkening */
+.tile img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+@keyframes scrollUp{
+  0%  {transform:translateY(0)}
+  100%{transform:translateY(-50%)}
+}
+@keyframes scrollDown{
+  0%  {transform:translateY(-50%)}
+  100%{transform:translateY(0)}
+}
+
+/* Forgot password section */
+#forgotSection input{
+  width:100%;
+  padding:12px 16px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,0.03);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  font-size:14px;
+  outline:none;
+  margin-bottom:16px;
+}
+#forgotSection input:focus{
+  border-color:rgba(29,185,84,.5);
+}
+#forgotSection input::placeholder{color:rgba(255,255,255,0.2)}
+
+#question{
+  color:rgba(255,255,255,0.8);
+  font-size:14px;
+  margin-bottom:12px;
+  padding:12px;
+  background:rgba(29,185,84,.06);
+  border:1px solid rgba(29,185,84,.15);
+  border-radius:8px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- LEFT FORM PANEL -->
+<div class="left">
+
+  <div class="logo">RevPlay</div>
+
+  <!-- LOGIN SECTION -->
+  <div id="loginSection">
+
+    <h2 class="heading">Welcome back</h2>
+    <p class="subheading">Sign in to continue listening</p>
+
+    <form id="loginForm">
+      <label>Email</label>
+      <div class="input-wrap">
+        <input type="text" id="email" placeholder="you@example.com" required>
+      </div>
+
+      <label>Password</label>
+      <div class="input-wrap">
+        <input type="password" id="password" placeholder="••••••••" required minlength="8"
+  maxlength="20">
+      </div>
+
+      <div class="forgot-row">
+        <a onclick="showForgot()">Forgot password?</a>
+      </div>
+
+      <button class="submit-btn" type="submit">Sign In</button>
+    </form>
+
+    <p class="bottom-link">Don't have an account? <a th:href="@{/register}">Create Account</a></p>
+
+  </div>
+
+  <!-- FORGOT PASSWORD SECTION -->
+  <div id="forgotSection" class="hidden">
+
+    <h2 class="heading">Reset Password</h2>
+    <p class="subheading">Answer your security question</p>
+
+    <input id="emailReset" placeholder="Enter your email" required>
+
+    <button class="submit-btn" type="button" onclick="getQuestion()">Next</button>
+
+    <div id="questionBox" class="hidden">
+      <p id="question"></p>
+      <input id="answer" placeholder="Security answer" required>
+      <button class="submit-btn" type="button" onclick="verifyAnswer()">Verify</button>
+    </div>
+
+    <div id="resetBox" class="hidden">
+      <input type="password" id="newPassword" placeholder="New password" required>
+      <button class="submit-btn" type="button" onclick="resetPassword()">Reset Password</button>
+    </div>
+
+    <p class="bottom-link"><a onclick="showLogin()">← Back to Login</a></p>
+
+  </div>
+
+  <p id="error" class="error"></p>
+  <p id="successMessage" class="success"></p>
+
+</div>
+
+<!-- RIGHT MOSAIC PANEL -->
+<div class="right">
+  <div class="mosaic-wrap" id="mosaic"></div>
+</div>
+
+<script>
+
+/* ── MOSAIC DATA ── */
+// Using public domain / freely licensable movie poster & album cover images via picsum + themed colors
+const items = [
+  {src:"/uploads/album/1773033375592_dhurandhar.jpg",h:300},
+  {src:"/uploads/album/1773035863925_peddi.jpg",h:340},
+  {src:"/uploads/album/1773039448752_beast_2022_.jpg",h:300},
+  {src:"/uploads/album/1773079317331_dookudu.jpg",h:320},
+  {src:"/uploads/album/1773092041715_businessman.jpg",h:300},
+  {src:"/uploads/album/Guru_2007_poster.jpg",h:340},
+  {src:"/uploads/album/leo.jpg",h:300},
+  {src:"/uploads/album/1n.jpg",h:320},
+  {src:"/uploads/album/salaar.jpg",h:300},
+  {src:"/uploads/album/rangasthalam.jpg",h:340},
+  {src:"/uploads/album/avpl.jpg",h:300},
+  {src:"/uploads/album/athadu.jpg",h:320},
+  {src:"/uploads/album/tamasha.jpg",h:300},
+  {src:"/uploads/album/pokiri.jpg",h:340},
+  {src:"/uploads/album/pushpa.jpg",h:300},
+  {src:"/uploads/album/kgf.jpg",h:320},
+  {src:"/uploads/album/3_idiots.jpg",h:300},
+  {src:"/uploads/album/chichhore.jpg",h:340},
+  {src:"/uploads/album/master.jpg",h:300},
+  {src:"/uploads/album/varanasi.jpg",h:300},
+  {src:"/uploads/album/vikram.jpg",h:300},
+  {src:"/uploads/album/rrr.jpg",h:300},
+  {src:"/uploads/album/doctor.jpg",h:300},
+  {src:"/uploads/album/bmb.jpg",h:300},
+  {src:"/uploads/album/lagaan.jpg",h:300},
+  {src:"/uploads/album/srm.jpg",h:300},
+  {src:"/uploads/album/khaleja.jpg",h:300},
+];
+
+function buildMosaic(){
+  const mosaic = document.getElementById('mosaic');
+  const numCols = 6;
+  const shuffled = [...items].sort(()=>Math.random()-.5);
+
+  for(let c=0;c<numCols;c++){
+    const col = document.createElement('div');
+    col.className = 'col';
+    const inner = document.createElement('div');
+    inner.className = 'inner';
+
+    const colItems = shuffled.filter((_,i)=>i%numCols===c);
+    // triple for seamless long loop
+    const tripled = [...colItems,...colItems,...colItems];
+
+    tripled.forEach(item=>{
+      const tile = document.createElement('div');
+      tile.className = 'tile';
+      tile.style.height = item.h+'px';
+      const img = document.createElement('img');
+      img.src = item.src;
+      img.alt = '';
+      tile.appendChild(img);
+      inner.appendChild(tile);
+    });
+
+    col.appendChild(inner);
+    mosaic.appendChild(col);
+  }
+}
+
+buildMosaic();
+
+/* ── AUTH LOGIC ── */
+
+document.getElementById("loginForm").addEventListener("submit",function(e){
+  e.preventDefault();
+  const emailVal = document.getElementById('email').value;
+  const passVal = document.getElementById('password').value;
+
+  fetch("/auth/login",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({email:emailVal,password:passVal})
+  })
+  .then(res=>{
+    if(!res.ok) throw new Error("Invalid credentials")
+    return res.text()
+  })
+  .then(token=>{
+    localStorage.setItem("jwt",token)
+    document.cookie="jwt="+token+"; path=/; max-age=36000; SameSite=Strict"
+    window.location.href="/home"
+  })
+  .catch(err=>{
+    document.getElementById('error').innerText=err.message
+  })
+})
+
+function showForgot(){
+  clearMessages();
+  document.getElementById('loginSection').classList.add('hidden')
+  document.getElementById('forgotSection').classList.remove('hidden')
+}
+
+function showLogin(){
+  clearMessages();
+  document.getElementById('forgotSection').classList.add('hidden')
+  document.getElementById('loginSection').classList.remove('hidden')
+}
+
+function clearMessages(){
+  document.getElementById('error').innerText=''
+  document.getElementById('successMessage').innerText=''
+}
+
+async function getQuestion(){
+  const email=document.getElementById('emailReset').value.trim()
+  if(!email){document.getElementById('error').innerText="Please enter your email";return}
+  try{
+    const res=await fetch("/auth/security-question?email="+email)
+    if(!res.ok) throw new Error("User not found")
+    const q=await res.text()
+    document.getElementById('question').innerText=q
+    document.getElementById('questionBox').classList.remove('hidden')
+  }catch(err){document.getElementById('error').innerText=err.message}
+}
+
+async function verifyAnswer(){
+  const email=document.getElementById('emailReset').value.trim()
+  const ans=document.getElementById('answer').value.trim()
+  if(!ans){document.getElementById('error').innerText="Please enter your answer";return}
+  try{
+    const res=await fetch("/auth/verify-answer?email="+email+"&answer="+ans,{method:"POST"})
+    if(!res.ok) throw new Error("Wrong answer")
+    const result=await res.text()
+    if(result!=="true") throw new Error("Incorrect security answer")
+    document.getElementById('resetBox').classList.remove('hidden')
+  }catch(err){document.getElementById('error').innerText=err.message}
+}
+
+async function resetPassword(){
+  const email=document.getElementById('emailReset').value.trim()
+  const pass=document.getElementById('newPassword').value.trim()
+  if(!pass){document.getElementById('error').innerText="Please enter a new password";return}
+  if(pass.length<6){document.getElementById('error').innerText="Password must be at least 8 characters";return}
+  try{
+    const res=await fetch("/auth/reset-password?email="+email+"&newPassword="+pass,{method:"POST"})
+    if(!res.ok) throw new Error("Reset failed")
+    document.getElementById('successMessage').innerText="Password updated successfully!"
+    setTimeout(showLogin,2000)
+  }catch(err){document.getElementById('error').innerText=err.message}
+}
+
+</script>
+</body>
+</html>

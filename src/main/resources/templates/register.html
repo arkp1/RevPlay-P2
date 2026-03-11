@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>RevPlay - Register</title>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --green:#1db954;
+  --green-light:#1ed760;
+  --bg:#0a0a0a;
+  --border:rgba(255,255,255,0.08);
+  --text:#ffffff;
+  --muted:#6b6b80;
+}
+
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--bg);
+  display:flex;
+  min-height:100vh;
+  overflow:hidden;
+}
+
+/* ── LEFT PANEL ── */
+.left{
+  width:460px;
+  min-width:460px;
+  background:var(--bg);
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-start;
+  padding:40px 48px;
+  position:relative;
+  z-index:10;
+  overflow-y:auto;
+  max-height:100vh;
+  scrollbar-width:none;
+}
+.left::-webkit-scrollbar{display:none}
+
+.left::after{
+  content:'';
+  position:absolute;
+  right:0;top:0;bottom:0;
+  width:1px;
+  background:linear-gradient(to bottom,transparent,var(--border) 20%,var(--border) 80%,transparent);
+}
+
+.logo{
+  font-family:'Syne',sans-serif;
+  font-size:22px;
+  font-weight:800;
+  color:var(--green);
+  letter-spacing:4px;
+  text-transform:uppercase;
+  margin-bottom:32px;
+  flex-shrink:0;
+}
+
+.heading{
+  font-family:'Syne',sans-serif;
+  font-size:26px;
+  font-weight:700;
+  color:var(--text);
+  line-height:1.2;
+  margin-bottom:6px;
+}
+
+.subheading{
+  font-size:14px;
+  color:var(--muted);
+  margin-bottom:28px;
+}
+
+/* ── ROLE TOGGLE ── */
+.role-toggle{
+  display:flex;
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:4px;
+  margin-bottom:28px;
+  gap:4px;
+}
+
+.role-toggle button{
+  flex:1;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  background:transparent;
+  color:var(--muted);
+  font-family:'Syne',sans-serif;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+  transition:background .2s,color .2s;
+  letter-spacing:.5px;
+}
+.role-toggle button:hover{color:var(--text)}
+.role-toggle button.active{
+  background:var(--green);
+  color:#000;
+}
+
+/* ── SECTION LABEL ── */
+.section-label{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--green);
+  margin:20px 0 14px;
+  padding-bottom:8px;
+  border-bottom:1px solid rgba(29,185,84,0.15);
+}
+
+/* ── FORM ELEMENTS ── */
+label{
+  display:block;
+  font-size:11px;
+    color:rgba(255,255,255,0.7);
+  margin-bottom:6px;
+  letter-spacing:.4px;
+  text-transform:uppercase;
+}
+
+.field{margin-bottom:16px}
+
+input[type=text],
+input[type=email],
+input[type=password],
+select,
+textarea{
+  width:100%;
+  padding:11px 14px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,0.03);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  font-size:14px;
+  outline:none;
+  transition:border-color .2s,background .2s;
+  appearance:none;
+  -webkit-appearance:none;
+}
+input:focus,select:focus,textarea:focus{
+  border-color:rgba(29,185,84,.5);
+  background:rgba(29,185,84,.04);
+}
+input::placeholder,textarea::placeholder{color:rgba(255,255,255,0.18)}
+
+select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236b6b80' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 14px center;
+  background-color:rgba(255,255,255,0.03);
+  padding-right:36px;
+  cursor:pointer;
+}
+select option{background:#111;color:#fff}
+
+textarea{resize:vertical;min-height:76px}
+
+/* file input */
+input[type=file]{
+  padding:10px 14px;
+  cursor:pointer;
+  color:var(--muted);
+}
+input[type=file]::file-selector-button{
+  background:rgba(29,185,84,0.12);
+  border:1px solid rgba(29,185,84,0.25);
+  color:var(--green);
+  padding:5px 12px;
+  border-radius:6px;
+  font-family:'DM Sans',sans-serif;
+  font-size:12px;
+  font-weight:600;
+  cursor:pointer;
+  margin-right:10px;
+  transition:background .2s;
+}
+input[type=file]::file-selector-button:hover{background:rgba(29,185,84,.22)}
+
+/* two-col row */
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ── SUBMIT BTN ── */
+.submit-btn{
+  width:100%;
+  padding:13px;
+  border:none;
+  border-radius:10px;
+  background:var(--green);
+  color:#000;
+  font-family:'Syne',sans-serif;
+  font-size:15px;
+  font-weight:700;
+  letter-spacing:.5px;
+  cursor:pointer;
+  transition:background .2s,transform .1s;
+  margin-top:8px;
+  margin-bottom:4px;
+}
+.submit-btn:hover{background:var(--green-light)}
+.submit-btn:active{transform:scale(.98)}
+
+.bottom-link{
+  text-align:center;
+  font-size:13px;
+  color:var(--muted);
+  margin-top:18px;
+}
+.bottom-link a{
+  color:var(--green);
+  text-decoration:none;
+  font-weight:500;
+}
+
+.error{color:#ff5c5c;font-size:13px;text-align:center;margin-top:10px;min-height:18px}
+.success{
+  color:var(--green);
+  background:rgba(29,185,84,.08);
+  border:1px solid rgba(29,185,84,.25);
+  border-radius:8px;
+  text-align:center;
+  font-size:13px;
+  font-weight:600;
+  padding:10px 16px;
+  margin-top:10px;
+}
+.hidden{display:none!important}
+
+/* ── RIGHT MOSAIC PANEL ── */
+.right{
+  flex:1;
+  overflow:hidden;
+  position:relative;
+  background:#050505;
+}
+
+.right::before{
+  content:'';
+  position:absolute;
+  left:0;top:0;bottom:0;
+  width:100px;
+  background:linear-gradient(to right,var(--bg),transparent);
+  z-index:5;
+  pointer-events:none;
+}
+
+.mosaic-wrap{
+  position:absolute;
+  inset:-40% -20%;
+  transform:rotate(-15deg);
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+}
+
+.col{display:flex;flex-direction:column;gap:12px;flex:1;min-width:160px}
+
+.col:nth-child(1) .inner{animation:scrollUp   32s linear infinite}
+.col:nth-child(2) .inner{animation:scrollDown 38s linear infinite}
+.col:nth-child(3) .inner{animation:scrollUp   28s linear infinite}
+.col:nth-child(4) .inner{animation:scrollDown 35s linear infinite}
+.col:nth-child(5) .inner{animation:scrollUp   42s linear infinite}
+.col:nth-child(6) .inner{animation:scrollDown 30s linear infinite}
+
+.inner{display:flex;flex-direction:column;gap:12px}
+
+.tile{border-radius:10px;overflow:hidden;flex-shrink:0;width:100%}
+.tile img{width:100%;height:100%;object-fit:cover;display:block}
+
+@keyframes scrollUp{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
+@keyframes scrollDown{0%{transform:translateY(-50%)}100%{transform:translateY(0)}}
+</style>
+</head>
+
+<body>
+
+<!-- LEFT FORM PANEL -->
+<div class="left">
+
+  <div class="logo">RevPlay</div>
+
+
+  <h2 class="heading">Create an account</h2>
+  <p class="subheading">Join millions of music lovers</p>
+
+  <form id="registerForm">
+
+    <!-- ROLE TOGGLE -->
+    <div class="role-toggle">
+      <button type="button" id="btnListener" onclick="selectRole('LISTENER')">Listener</button>
+      <button type="button" id="btnArtist"   onclick="selectRole('ARTIST')">Artist</button>
+    </div>
+    <input type="hidden" id="role" value="">
+
+    <!-- COMMON FIELDS -->
+    <div id="commonFields" class="hidden">
+
+      <div class="section-label">Account Info</div>
+
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="userName" placeholder="Choose a username" required>
+      </div>
+
+      <div class="field">
+        <label>Email</label>
+        <input 
+  type="email"
+  id="email"
+  placeholder="you@example.com"
+  required
+  pattern="^[^\s@]+@[^\s@]+\.[^\s@]{2,}$"
+  oninvalid="this.setCustomValidity('Please enter a valid email like name@gmail.com')"
+  oninput="this.setCustomValidity('')">
+      </div>
+
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="••••••••" required minlength="8"
+  maxlength="20">
+      </div>
+
+      <div class="field" id="userBioWrap">
+        <label>Bio</label>
+        <textarea id="userBio" placeholder="Tell us about yourself…"></textarea>
+      </div>
+
+      <div class="field" id="artistBioWrap" style="display:none">
+        <label>Artist Bio</label>
+        <textarea id="artistBio" placeholder="Describe your music and journey…"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Profile Photo</label>
+        <input type="file" id="profileImage" accept="image/*" required>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Security Question</label>
+          <select id="securityQuestion" required>
+            <option value="">Select a question</option>
+            <option value="What is your first school name?">First school name?</option>
+            <option value="What is your pet name?">Pet name?</option>
+            <option value="What is your favourite food?">Favourite food?</option>
+            <option value="What city were you born in?">City you were born in?</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Security Answer</label>
+          <input type="text" id="securityAnswer" placeholder="Your answer" required>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ARTIST FIELDS -->
+    <div id="artistFields" class="hidden">
+
+      <div class="section-label">Artist Details</div>
+
+      <div class="row">
+        <div class="field">
+          <label>Artist Name</label>
+          <input type="text" id="artistName" placeholder="Stage name">
+        </div>
+        <div class="field">
+          <label>Genre</label>
+          <input type="text" id="genre" placeholder="Pop, Hip-Hop, Jazz…">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Banner Image</label>
+        <input type="file" id="bannerImage" accept="image/*">
+      </div>
+
+      <div class="section-label">Social Links</div>
+
+      <div class="row">
+        <div class="field">
+          <label>Instagram</label>
+          <input type="text" id="instagramLink" placeholder="instagram.com/…">
+        </div>
+        <div class="field">
+          <label>Twitter</label>
+          <input type="text" id="twitterLink" placeholder="twitter.com/…">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Spotify</label>
+          <input type="text" id="spotifyLink" placeholder="open.spotify.com/…">
+        </div>
+        <div class="field">
+          <label>Website</label>
+          <input type="text" id="websiteLink" placeholder="yourwebsite.com">
+        </div>
+      </div>
+
+    </div>
+
+    <button class="submit-btn" type="submit">Create Account</button>
+
+  </form>
+
+  <p id="error" class="error"></p>
+
+  <p class="bottom-link">Already have an account? <a href="/login">Sign in</a></p>
+
+</div>
+
+<!-- RIGHT MOSAIC PANEL -->
+<div class="right">
+  <div class="mosaic-wrap" id="mosaic"></div>
+</div>
+
+<script>
+
+const items = [
+	  {src:"/uploads/album/1773033375592_dhurandhar.jpg",h:300},
+	  {src:"/uploads/album/1773035863925_peddi.jpg",h:340},
+	  {src:"/uploads/album/1773039448752_beast_2022_.jpg",h:300},
+	  {src:"/uploads/album/1773079317331_dookudu.jpg",h:320},
+	  {src:"/uploads/album/1773092041715_businessman.jpg",h:300},
+	  {src:"/uploads/album/Guru_2007_poster.jpg",h:340},
+	  {src:"/uploads/album/leo.jpg",h:300},
+	  {src:"/uploads/album/1n.jpg",h:320},
+	  {src:"/uploads/album/salaar.jpg",h:300},
+	  {src:"/uploads/album/rangasthalam.jpg",h:340},
+	  {src:"/uploads/album/avpl.jpg",h:300},
+	  {src:"/uploads/album/athadu.jpg",h:320},
+	  {src:"/uploads/album/tamasha.jpg",h:300},
+	  {src:"/uploads/album/pokiri.jpg",h:340},
+	  {src:"/uploads/album/pushpa.jpg",h:300},
+	  {src:"/uploads/album/kgf.jpg",h:320},
+	  {src:"/uploads/album/3_idiots.jpg",h:300},
+	  {src:"/uploads/album/chichhore.jpg",h:340},
+	  {src:"/uploads/album/master.jpg",h:300},
+	  {src:"/uploads/album/varanasi.jpg",h:300},
+	  {src:"/uploads/album/vikram.jpg",h:300},
+	  {src:"/uploads/album/rrr.jpg",h:300},
+	  {src:"/uploads/album/doctor.jpg",h:300},
+	  {src:"/uploads/album/bmb.jpg",h:300},
+	  {src:"/uploads/album/lagaan.jpg",h:300},
+	  {src:"/uploads/album/srm.jpg",h:300},
+	  {src:"/uploads/album/khaleja.jpg",h:300},
+	  {src:"/uploads/album/bahubali.jpg",h:300},
+	];
+
+function buildMosaic(){
+  const mosaic = document.getElementById('mosaic');
+  const numCols = 6;
+  const shuffled = [...items].sort(()=>Math.random()-.5);
+  for(let c=0;c<numCols;c++){
+    const col = document.createElement('div');
+    col.className = 'col';
+    const inner = document.createElement('div');
+    inner.className = 'inner';
+    const colItems = shuffled.filter((_,i)=>i%numCols===c);
+    [...colItems,...colItems,...colItems].forEach(item=>{
+      const tile = document.createElement('div');
+      tile.className = 'tile';
+      tile.style.height = item.h+'px';
+      const img = document.createElement('img');
+      img.src = item.src;
+      img.alt = '';
+      tile.appendChild(img);
+      inner.appendChild(tile);
+    });
+    col.appendChild(inner);
+    mosaic.appendChild(col);
+  }
+}
+buildMosaic();
+
+/* ── ROLE LOGIC ── */
+const artistRequiredFields = ["artistName","genre","bannerImage"];
+
+function selectRole(value){
+  document.getElementById("role").value = value;
+  document.getElementById("btnListener").classList.toggle("active", value==="LISTENER");
+  document.getElementById("btnArtist").classList.toggle("active", value==="ARTIST");
+
+  document.getElementById("commonFields").classList.remove("hidden");
+
+  const isArtist = value === "ARTIST";
+  document.getElementById("artistFields").classList.toggle("hidden", !isArtist);
+  document.getElementById("userBioWrap").style.display  = isArtist ? "none" : "block";
+  document.getElementById("artistBioWrap").style.display = isArtist ? "block" : "none";
+
+  artistRequiredFields.forEach(id=>{
+    const el = document.getElementById(id);
+    if(isArtist) el.setAttribute("required","required");
+    else el.removeAttribute("required");
+  });
+}
+
+/* ── SUBMIT ── */
+document.getElementById("registerForm").addEventListener("submit",function(e){
+  e.preventDefault();
+  const roleValue = document.getElementById("role").value;
+  if(!roleValue){ document.getElementById("error").innerText="Please select a role"; return; }
+
+  const formData = new FormData();
+  formData.append("userName",  document.getElementById("userName").value);
+  formData.append("email",     document.getElementById("email").value);
+  formData.append("password",  document.getElementById("password").value);
+  formData.append("role",      roleValue);
+  formData.append("securityQuestion", document.getElementById("securityQuestion").value);
+  formData.append("securityAnswer",   document.getElementById("securityAnswer").value);
+
+  const file = document.getElementById("profileImage").files[0];
+  if(file) formData.append("profileImage", file);
+
+  if(roleValue==="LISTENER"){
+    formData.append("bio", document.getElementById("userBio").value);
+  }
+
+  if(roleValue==="ARTIST"){
+    formData.append("artistName",    document.getElementById("artistName").value);
+    formData.append("bio",           document.getElementById("artistBio").value);
+    formData.append("genre",         document.getElementById("genre").value);
+    const banner = document.getElementById("bannerImage").files[0];
+    if(banner) formData.append("bannerImage", banner);
+    formData.append("instagramLink", document.getElementById("instagramLink").value);
+    formData.append("twitterLink",   document.getElementById("twitterLink").value);
+    formData.append("spotifyLink",   document.getElementById("spotifyLink").value);
+    formData.append("websiteLink",   document.getElementById("websiteLink").value);
+  }
+
+  fetch("/auth/register",{method:"POST",body:formData})
+  .then(res=>{ if(!res.ok) throw new Error("Registration failed"); return res.json(); })
+  .then(()=>{
+    const err = document.getElementById("error");
+    err.className = "success";
+    err.innerText = "✓ Account created! Redirecting to login…";
+    setTimeout(()=>{ window.location.href="/login"; },1500);
+  })
+  .catch(err=>{ document.getElementById("error").innerText=err.message; });
+});
+</script>
+</body>
+</html>

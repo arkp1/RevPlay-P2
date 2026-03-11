@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RevPlay — Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#0b0b13; --bg2:#111120; --surface:#161625; --surface2:#1d1d30;
+      --green:#1db954; --green-dim:rgba(29,185,84,0.10); --green-glow:rgba(29,185,84,0.22);
+      --text:#f0f0f8; --muted:#7a7a9a; --border:rgba(255,255,255,0.06); --player-h:84px;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; padding-bottom:var(--player-h); }
+    body::before { content:''; position:fixed; top:-260px; left:-260px; width:700px; height:700px; background:radial-gradient(circle,rgba(29,185,84,0.055) 0%,transparent 65%); pointer-events:none; z-index:0; }
+    body::after  { content:''; position:fixed; bottom:var(--player-h); right:-200px; width:500px; height:500px; background:radial-gradient(circle,rgba(29,185,84,0.035) 0%,transparent 65%); pointer-events:none; z-index:0; }
+    h1,h2,h3,h4,h5,.logo { font-family:'Syne',sans-serif; }
+
+    /* Nav */
+    .revnav { background:rgba(10,10,20,0.85); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:200; padding:0 2rem; }
+    .revnav .navbar-brand { font-family:'Syne',sans-serif; font-weight:800; font-size:1.25rem; letter-spacing:0.22em; text-transform:uppercase; color:var(--green)!important; }
+    .revnav .nav-link { color:var(--muted)!important; font-size:.875rem; font-weight:500; padding:1.1rem .9rem!important; border-bottom:2px solid transparent; transition:color .2s,border-color .2s; }
+    .revnav .nav-link:hover,.revnav .nav-link.active { color:var(--text)!important; border-bottom-color:var(--green); }
+    .revnav .nav-link.active { color:var(--green)!important; }
+    .nav-search { position:relative; }
+    .nav-search input { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.09); border-radius:30px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:.85rem; padding:.5rem 1rem .5rem 2.4rem; width:320px; outline:none; transition:border-color .2s,background .2s; }
+    .nav-search input:focus { border-color:rgba(29,185,84,0.35); background:rgba(255,255,255,0.09); }
+    .nav-search input::placeholder { color:var(--muted); }
+    .nav-search .search-icon { position:absolute; left:.8rem; top:50%; transform:translateY(-50%); color:var(--muted); font-size:.85rem; pointer-events:none; }
+    .search-dropdown { display:none; position:absolute; top:calc(100% + 8px); left:0; width:100%; max-height:60vh; overflow-y:auto; background:var(--surface2); border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:12px; z-index:999; box-shadow:0 24px 60px rgba(0,0,0,0.65); }
+    .search-item { padding:8px 10px; border-radius:8px; cursor:pointer; transition:background .15s; }
+    .search-item:hover { background:rgba(255,255,255,0.06); }
+    .search-label { font-size:.7rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--green); margin:10px 4px 6px; }
+
+    /* Page */
+    .page { position:relative; z-index:1; padding:3rem 0; }
+    .page-eyebrow { font-size:.7rem; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:var(--green); margin-bottom:4px; }
+    .page-heading { font-size:2.2rem; font-weight:800; letter-spacing:-0.02em; line-height:1.1; }
+    .section { margin-bottom:3.5rem; }
+    .sec-title { font-size:1.05rem; font-weight:700; letter-spacing:-0.01em; }
+    .see-all { font-size:.72rem; font-weight:600; color:var(--green); text-decoration:none; letter-spacing:.08em; text-transform:uppercase; opacity:.7; transition:opacity .2s; cursor:pointer; background:none; border:none; }
+    .see-all:hover { opacity:1; color:var(--green); }
+    .rev-divider { border-color:var(--border); margin-bottom:3.5rem; opacity:1; }
+
+    /* Song cards */
+    .song-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 14px; display:flex; align-items:center; gap:12px; text-decoration:none; color:inherit; transition:background .2s,border-color .2s,transform .2s; animation:rise .45s ease both; }
+    .song-card:hover { background:var(--surface2); border-color:rgba(29,185,84,0.18); transform:translateY(-2px); color:inherit; }
+    .song-num { font-size:.7rem; font-weight:700; color:var(--muted); width:16px; text-align:center; flex-shrink:0; }
+    .song-thumb { width:40px; height:40px; border-radius:8px; background:linear-gradient(135deg,#1db954,#0b5e28); display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0; overflow:hidden; }
+    .song-thumb img { width:100%; height:100%; object-fit:fill; border-radius:8px; }
+    .song-meta { flex:1; min-width:0; }
+    .song-meta .name { font-size:.875rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; }
+    .song-meta .artist { font-size:.75rem; color:var(--muted); display:block; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .song-plays { font-size:.7rem; font-weight:600; color:var(--green); background:var(--green-dim); padding:3px 9px; border-radius:100px; flex-shrink:0; }
+
+    /* Artist cards */
+    .artist-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px 18px; display:flex; align-items:center; gap:12px; text-decoration:none; color:inherit; transition:background .2s,transform .2s; animation:rise .45s ease both; }
+    .artist-card:hover { background:var(--surface2); transform:translateY(-3px); color:inherit; }
+    .artist-av { width:46px; height:46px; border-radius:50%; background:linear-gradient(135deg,#1db954 0%,#0a3d1f 100%); border:2px solid rgba(29,185,84,0.28); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:800; font-family:'Syne',sans-serif; flex-shrink:0; overflow:hidden; }
+    .artist-av.has-img { background:transparent; }
+    .artist-meta .name { font-size:.875rem; font-weight:600; }
+    .artist-meta .followers { font-size:.75rem; color:var(--muted); margin-top:2px; }
+    .artist-meta .fcount { color:var(--green); font-weight:600; }
+
+    /* Album cards */
+    .album-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; text-decoration:none; color:inherit; display:block; transition:transform .2s,border-color .2s; animation:rise .45s ease both; }
+    .album-card:hover { transform:translateY(-5px); border-color:rgba(29,185,84,0.2); color:inherit; }
+    .album-art { width:100%; aspect-ratio:1; background:linear-gradient(135deg,#1a1a2e 0%,#0f2a1a 60%,#0b1a0e 100%); display:flex; align-items:center; justify-content:center; font-size:2.8rem; overflow:hidden; }
+    .album-art img { width:100%; height:100%; object-fit:fill; }
+    .album-body { padding:12px 14px; }
+    .album-body .title { font-size:.8rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; }
+    .album-body .artist { font-size:.72rem; color:var(--muted); margin-top:2px; }
+    .album-body .date { font-size:.72rem; color:var(--green); margin-top:4px; font-weight:600; }
+
+    /* Podcast cards */
+    .podcast-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px 18px; display:flex; gap:14px; text-decoration:none; color:inherit; transition:background .2s,transform .2s; animation:rise .45s ease both; }
+    .podcast-card:hover { background:var(--surface2); transform:translateY(-2px); color:inherit; }
+    .podcast-icon { width:48px; height:48px; border-radius:10px; background:linear-gradient(135deg,#1db954,#0f6e32); display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0; }
+    .podcast-meta .title { font-size:.875rem; font-weight:600; }
+    .podcast-meta p { font-size:.75rem; color:var(--muted); margin-top:4px; line-height:1.5; }
+
+    /* PLAYLIST CARDS */
+    .playlist-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:22px; cursor:pointer; position:relative; overflow:hidden; transition:background .2s,transform .2s; animation:rise .45s ease both; }
+    .playlist-card::after { content:'♫'; position:absolute; bottom:-12px; right:8px; font-size:5rem; color:rgba(29,185,84,0.04); pointer-events:none; transition:transform .3s,color .3s; }
+    .playlist-card:hover { background:var(--surface2); transform:translateY(-3px); }
+    .playlist-card:hover::after { color:rgba(29,185,84,0.09); transform:scale(1.1) rotate(-5deg); }
+    .pl-badge { display:inline-block; font-size:.65rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--green); background:var(--green-dim); border-radius:4px; padding:2px 7px; margin-bottom:8px; }
+    .playlist-card .pl-title { font-size:1rem; font-weight:700; letter-spacing:-0.01em; }
+    .playlist-card .pl-desc { font-size:.78rem; color:var(--muted); margin-top:6px; line-height:1.55; }
+
+    @keyframes rise { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+    /*
+       SEE ALL DRAWER
+  */
+    .sa-overlay {
+      display:none; position:fixed; inset:0; z-index:800;
+      background:rgba(0,0,0,0.65); backdrop-filter:blur(4px);
+      animation:fadeIn .2s ease;
+    }
+    .sa-overlay.open { display:block; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+    .sa-drawer {
+      position:fixed; top:0; right:-560px; width:540px; max-width:95vw;
+      height:100vh; z-index:801;
+      background:var(--bg2); border-left:1px solid var(--border);
+      display:flex; flex-direction:column;
+      transition:right .3s cubic-bezier(.4,0,.2,1);
+      padding-bottom:var(--player-h);
+    }
+    .sa-drawer.open { right:0; }
+
+    .sa-header {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:20px 24px 16px;
+      border-bottom:1px solid var(--border);
+      flex-shrink:0;
+    }
+    .sa-header h3 { font-size:1rem; font-weight:700; font-family:'Syne',sans-serif; margin:0; }
+    .sa-close {
+      background:none; border:none; color:var(--muted); font-size:1.2rem;
+      cursor:pointer; padding:4px 8px; border-radius:8px; transition:color .2s,background .2s;
+    }
+    .sa-close:hover { color:var(--text); background:rgba(255,255,255,0.06); }
+
+    .sa-body {
+      flex:1; overflow-y:auto; padding:16px 24px;
+      scrollbar-width:thin; scrollbar-color:rgba(255,255,255,0.1) transparent;
+    }
+    .sa-body::-webkit-scrollbar { width:4px; }
+    .sa-body::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:4px; }
+
+    .sa-loading { text-align:center; color:var(--muted); padding:40px 0; font-size:.875rem; }
+    .sa-count { font-size:.7rem; color:var(--muted); font-weight:500; }
+
+    /* Drawer item styles */
+    .sa-song-item { display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:10px; text-decoration:none; color:inherit; transition:background .15s; cursor:pointer; }
+    .sa-song-item:hover { background:rgba(255,255,255,0.05); }
+    .sa-song-num { font-size:.7rem; color:var(--muted); width:20px; text-align:center; flex-shrink:0; }
+    .sa-thumb { width:38px; height:38px; border-radius:7px; background:linear-gradient(135deg,#1db954,#0b5e28); display:flex; align-items:center; justify-content:center; font-size:.9rem; flex-shrink:0; overflow:hidden; }
+    .sa-thumb img { width:100%; height:100%; object-fit:fill; border-radius:7px; }
+    .sa-info { flex:1; min-width:0; }
+    .sa-info strong { display:block; font-size:.85rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .sa-info span { font-size:.72rem; color:var(--muted); }
+    .sa-badge { font-size:.68rem; font-weight:600; color:var(--green); background:var(--green-dim); padding:2px 8px; border-radius:100px; flex-shrink:0; }
+
+    .sa-artist-item { display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:10px; text-decoration:none; color:inherit; transition:background .15s; }
+    .sa-artist-item:hover { background:rgba(255,255,255,0.05); }
+    .sa-av { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,#1db954,#0a3d1f); border:2px solid rgba(29,185,84,0.25); display:flex; align-items:center; justify-content:center; font-size:1rem; font-weight:800; font-family:'Syne',sans-serif; flex-shrink:0; overflow:hidden; }
+
+    .sa-album-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+    .sa-album-item { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; text-decoration:none; color:inherit; transition:transform .2s,border-color .2s; display:block; }
+    .sa-album-item:hover { transform:translateY(-3px); border-color:rgba(29,185,84,0.2); }
+    .sa-album-art { width:100%; aspect-ratio:1; background:linear-gradient(135deg,#1a1a2e,#0f2a1a); display:flex; align-items:center; justify-content:center; font-size:2rem; overflow:hidden; }
+    .sa-album-art img { width:100%; height:100%; object-fit:fill; }
+    .sa-album-body { padding:8px 10px; }
+    .sa-album-body strong { display:block; font-size:.75rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .sa-album-body span { font-size:.68rem; color:var(--muted); }
+    .sa-album-body em { display:block; font-size:.68rem; color:var(--green); font-style:normal; font-weight:600; margin-top:2px; }
+
+    .sa-podcast-item { display:flex; gap:12px; padding:12px; border-radius:10px; text-decoration:none; color:inherit; transition:background .15s; }
+    .sa-podcast-item:hover { background:rgba(255,255,255,0.05); }
+    .sa-podcast-icon { width:44px; height:44px; border-radius:9px; background:linear-gradient(135deg,#1db954,#0f6e32); display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+    .sa-podcast-info strong { display:block; font-size:.85rem; font-weight:600; }
+    .sa-podcast-info span { font-size:.72rem; color:var(--muted); line-height:1.5; display:block; margin-top:3px; }
+
+    .sa-playlist-item { padding:14px 12px; border-radius:10px; cursor:pointer; transition:background .15s; border:1px solid transparent; }
+    .sa-playlist-item:hover { background:rgba(255,255,255,0.04); border-color:var(--border); }
+    .sa-playlist-item strong { display:block; font-size:.875rem; font-weight:600; }
+    .sa-playlist-item p { font-size:.75rem; color:var(--muted); margin:4px 0 0; line-height:1.5; }
+
+    .sa-divider { height:1px; background:var(--border); margin:4px 0; }
+
+    /* BOTTOM PLAYER */
+    #bp { position:fixed; bottom:0; left:0; right:0; height:var(--player-h); z-index:900; background:rgba(8,8,18,0.97); backdrop-filter:blur(28px); border-top:1px solid rgba(255,255,255,0.06); display:grid; grid-template-columns:280px 1fr 280px; align-items:center; padding:0 1.5rem; }
+    #bp::before { content:''; position:absolute; top:0; left:0; height:2px; background:var(--green); width:var(--bp-pct,0%); transition:width .1s linear; }
+    .bp-left  { display:flex; align-items:center; gap:12px; min-width:0; }
+    .bp-art   { width:50px; height:50px; border-radius:8px; flex-shrink:0; background:linear-gradient(135deg,#1db954,#0a3d1f); display:flex; align-items:center; justify-content:center; font-size:1.2rem; overflow:hidden; }
+    .bp-art img { width:100%; height:100%; object-fit:fill; border-radius:8px; }
+    .bp-song-title  { font-size:.85rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .bp-song-artist { font-size:.75rem; color:var(--muted); margin-top:2px; }
+    .bp-center { display:flex; flex-direction:column; align-items:center; gap:5px; }
+    .bp-btns   { display:flex; align-items:center; gap:18px; }
+    .bp-btn    { background:none; border:none; color:var(--muted); cursor:pointer; font-size:1rem; transition:color .2s; padding:4px; }
+    .bp-btn:hover { color:#fff; }
+    .bp-play-btn { width:34px; height:34px; border-radius:50%; border:none; background:#fff; color:#000; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:.8rem; transition:transform .15s,background .15s; }
+    .bp-play-btn:hover { transform:scale(1.08); background:#e8e8e8; }
+    .bp-seek { display:flex; align-items:center; gap:8px; width:100%; max-width:380px; font-size:.68rem; color:var(--muted); }
+    .bp-bar   { flex:1; height:3px; background:rgba(255,255,255,0.1); border-radius:100px; cursor:pointer; }
+    .bp-bar-fill { height:100%; background:var(--green); border-radius:100px; width:0%; pointer-events:none; }
+    .bp-right { display:flex; align-items:center; justify-content:flex-end; gap:10px; }
+    .bp-vol-btn { background:none; border:none; color:var(--muted); cursor:pointer; font-size:.9rem; transition:color .2s; }
+    .bp-vol-btn:hover { color:#fff; }
+    input[type=range].bp-vol { -webkit-appearance:none; width:86px; height:3px; background:rgba(255,255,255,0.14); border-radius:100px; cursor:pointer; outline:none; }
+    input[type=range].bp-vol::-webkit-slider-thumb { -webkit-appearance:none; width:11px; height:11px; background:#fff; border-radius:50%; }
+    ::-webkit-scrollbar { width:5px; } ::-webkit-scrollbar-track { background:transparent; } ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:10px; }
+ 
+ .podcast-icon{
+  width:48px;
+  height:48px;
+  border-radius:10px;
+  background:linear-gradient(135deg,#38bdf8,#0284c7);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  flex-shrink:0;
+}
+
+.podcast-cover{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="revnav navbar navbar-expand-lg">
+  <div class="container-fluid px-2">
+    <a class="navbar-brand me-4" href="/home">RevPlay</a>
+    <div class="nav-search me-auto" style="position:relative;">
+      <i class="bi bi-search search-icon"></i>
+      <input type="text" id="searchInput" placeholder="Search songs, artists, albums…" oninput="handleSearch(this.value)">
+      <div id="searchResults" class="search-dropdown"><div id="searchContent"></div></div>
+    </div>
+    <div class="d-flex align-items-center gap-1 ms-4">
+      <a href="/home" class="nav-link active">Home</a>
+      <a href="/playlists" class="nav-link">Playlists</a>
+      <span th:if="${currentUser != null}" class="d-flex align-items-center gap-1">
+        <a th:if="${userRole == 'ARTIST'}" href="/artist-dashboard" class="nav-link">Studio</a>
+        <a th:href="@{/profile/{id}(id=${currentUser.userId})}" th:text="${currentUser.userName}" class="nav-link"></a>
+        <a href="#" onclick="logout()" class="nav-link ms-1">Logout</a>
+      </span>
+      <a th:if="${currentUser == null}" href="/login" class="nav-link">Login</a>
+    </div>
+  </div>
+</nav>
+
+<!-- PAGE -->
+<div class="page">
+  <div class="container-xl">
+    <p class="page-eyebrow" th:if="${currentUser != null}" th:text="'Welcome back, ' + ${currentUser.userName}">Welcome back</p>
+    <p class="page-eyebrow" th:if="${currentUser == null}">Discover Music</p>
+    <h1 class="page-heading mb-5">Your Dashboard</h1>
+
+    <!-- TRENDING SONGS -->
+    <section class="section">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="sec-title mb-0">Trending Songs</h2>
+        <button class="see-all" onclick="openDrawer('songs')">See all <i class="bi bi-arrow-right"></i></button>
+      </div>
+      <div class="row g-2">
+        <div th:each="song, iterStat : ${trendingSongs}" class="col-12 col-sm-6 col-xl-4">
+          <a th:href="@{'/view/songs/' + ${song.songId}}" class="song-card" th:style="'animation-delay:' + ${iterStat.index * 40} + 'ms'">
+            <span class="song-num" th:text="${iterStat.count}"></span>
+            <div class="song-thumb">
+              <img th:if="${song.album != null and song.album.coverImage != null}" th:src="${song.album.coverImage}" alt="Cover">
+              <i th:unless="${song.album != null and song.album.coverImage != null}" class="bi bi-music-note"></i>
+            </div>
+            <div class="song-meta">
+              <span class="name"   th:text="${song.title}"></span>
+              <span class="artist" th:text="${song.artist.artistName}"></span>
+            </div>
+            <span class="song-plays" th:text="${song.playCount}"></span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <hr class="rev-divider">
+
+    <!-- POPULAR ARTISTS -->
+    <section class="section">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="sec-title mb-0">Popular Artists</h2>
+        <button class="see-all" onclick="openDrawer('artists')">See all <i class="bi bi-arrow-right"></i></button>
+      </div>
+      <div class="row g-2">
+        <div th:each="artist, iterStat : ${popularArtists}" class="col-6 col-sm-4 col-md-3 col-lg-2">
+          <a th:href="@{'/view/artist/' + ${artist.artistId}}" class="artist-card h-100" th:style="'animation-delay:' + ${iterStat.index * 40} + 'ms'">
+            <div class="artist-av" th:classappend="${artist.user != null and artist.user.profileImage != null} ? 'has-img' : ''">
+              <img th:if="${artist.user != null and artist.user.profileImage != null}"
+                   th:src="${artist.user.profileImage}"
+                   style="width:100%;height:100%;object-fit:fill;border-radius:50%;display:block;" alt="Artist"/>
+              <span th:if="${artist.user == null or artist.user.profileImage == null}"
+                    th:text="${#strings.substring(artist.artistName,0,1)}"></span>
+            </div>
+            <div class="artist-meta">
+              <span class="name" th:text="${artist.artistName}"></span>
+              <span class="followers">Followers: <em class="fcount" th:text="${artist.followerCount}"></em></span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <hr class="rev-divider">
+
+    <!-- LATEST ALBUMS -->
+    <section class="section">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="sec-title mb-0">Latest Albums</h2>
+        <button class="see-all" onclick="openDrawer('albums')">See all <i class="bi bi-arrow-right"></i></button>
+      </div>
+      <div class="row g-3">
+        <div th:each="album, iterStat : ${latestAlbums}" class="col-6 col-sm-4 col-md-3 col-lg-2">
+          <a th:href="@{'/view/album/' + ${album.albumId}}" class="album-card" th:style="'animation-delay:' + ${iterStat.index * 40} + 'ms'">
+            <div class="album-art">
+              <img th:if="${album.coverImage != null}" th:src="${album.coverImage}" alt="Album Cover">
+              <span th:if="${album.coverImage == null}">💿</span>
+            </div>
+            <div class="album-body">
+              <span class="title"  th:text="${album.title}"></span>
+              <div class="artist"  th:text="${album.artist.artistName}"></div>
+              <div class="date"    th:text="${album.releaseDate}"></div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <hr class="rev-divider">
+
+    <!-- PODCASTS -->
+    <section class="section">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="sec-title mb-0">Podcasts</h2>
+        <button class="see-all" onclick="openDrawer('podcasts')">See all <i class="bi bi-arrow-right"></i></button>
+      </div>
+      <div class="row g-3">
+        <div th:each="podcast, iterStat : ${podcasts}" class="col-12 col-sm-6 col-lg-4">
+          <a th:href="@{'/view/podcast/' + ${podcast.podcastId}}" class="podcast-card h-100" th:style="'animation-delay:' + ${iterStat.index * 40} + 'ms'">
+           <div class="podcast-icon">
+
+  <img th:if="${podcast.coverImage != null}"
+       th:src="${podcast.coverImage}"
+       alt="Podcast Cover"
+       class="podcast-cover">
+
+  <i th:unless="${podcast.coverImage != null}"
+     class="bi bi-mic-fill"></i>
+
+</div>
+            <div class="podcast-meta">
+              <div class="title" th:text="${podcast.title}"></div>
+              <p th:text="${podcast.description}"></p>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <hr class="rev-divider">
+
+    <!-- PUBLIC PLAYLISTS -->
+    <section class="section">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="sec-title mb-0">Public Playlists</h2>
+        <button class="see-all" onclick="openDrawer('playlists')">See all <i class="bi bi-arrow-right"></i></button>
+      </div>
+      <div class="row g-3">
+        <div th:each="playlist, iterStat : ${playlists}" class="col-12 col-sm-6 col-md-4 col-xl-3">
+          <div class="playlist-card" th:style="'animation-delay:' + ${iterStat.index * 40} + 'ms'">
+            <span class="pl-badge">Playlist</span>
+            <div class="pl-title" th:text="${playlist.name}"></div>
+            <p class="pl-desc"    th:text="${playlist.description}"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<footer style="background:rgba(0,0,0,0.45);border-top:1px solid var(--border);color:var(--muted);font-size:.8rem;padding:1.5rem;text-align:center;margin-top:2rem;">© 2026 RevPlay. All rights reserved.</footer>
+
+<!--
+     SEE ALL DRAWER
+ -->
+<div class="sa-overlay" id="saOverlay" onclick="closeDrawer()"></div>
+<div class="sa-drawer" id="saDrawer">
+  <div class="sa-header">
+    <div>
+      <h3 id="saTitle">All Items</h3>
+      <span class="sa-count" id="saCount"></span>
+    </div>
+    <button class="sa-close" onclick="closeDrawer()"><i class="bi bi-x-lg"></i></button>
+  </div>
+  <div class="sa-body" id="saBody">
+    <div class="sa-loading">Loading…</div>
+  </div>
+</div>
+
+<!-- BOTTOM PLAYER -->
+<div id="bp">
+  <div class="bp-left">
+    <div class="bp-art" id="bpArt">♪</div>
+    <div style="min-width:0">
+      <div class="bp-song-title"  id="bpTitle">No song playing</div>
+      <div class="bp-song-artist" id="bpArtist">—</div>
+    </div>
+  </div>
+  <div class="bp-center">
+    <div class="bp-btns">
+      <button class="bp-btn"      id="bpRew"><i class="bi bi-skip-start-fill"></i></button>
+      <button class="bp-play-btn" id="bpPlay"><i class="bi bi-play-fill"></i></button>
+      <button class="bp-btn"      id="bpFwd"><i class="bi bi-skip-end-fill"></i></button>
+    </div>
+    <div class="bp-seek">
+      <span id="bpCur">0:00</span>
+      <div class="bp-bar" id="bpBar"><div class="bp-bar-fill" id="bpFill"></div></div>
+      <span id="bpDur">0:00</span>
+    </div>
+  </div>
+  <div class="bp-right">
+    <button class="bp-vol-btn" id="bpVolBtn"><i class="bi bi-volume-up-fill"></i></button>
+    <input type="range" class="bp-vol" id="bpVolSlider" min="0" max="1" step="0.02" value="1">
+  </div>
+</div>
+
+<audio id="globalAudio" style="display:none"></audio>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+/* ── SEARCH ── */
+let searchTimeout;
+function handleSearch(val) {
+  clearTimeout(searchTimeout);
+  if (!val.trim()) { document.getElementById("searchResults").style.display="none"; return; }
+  searchTimeout = setTimeout(() => {
+    fetch("/search?keyword=" + encodeURIComponent(val)).then(r=>r.json()).then(renderResults);
+  }, 300);
+}
+function renderResults(data) {
+  const box = document.getElementById("searchContent");
+  let html = "";
+  if (data.songs?.length) {
+    html += `<p class="search-label">Songs</p>`;
+    data.songs.forEach(s => { html += `<div class="search-item" onclick="openSong(${s.songId})"><strong style="font-size:.875rem">${s.title}</strong><span style="font-size:.75rem;color:#7a7a9a;margin-left:8px">${s.artistName}</span></div>`; });
+  }
+  if (data.artists?.length) {
+    html += `<p class="search-label">Artists</p>`;
+    data.artists.forEach(a => { html += `<div class="search-item" onclick="openArtist(${a.artistId})"><strong style="font-size:.875rem">${a.artistName}</strong></div>`; });
+  }
+  if (data.albums?.length) {
+    html += `<p class="search-label">Albums</p>`;
+    data.albums.forEach(a => { html += `<div class="search-item" onclick="openAlbum(${a.albumId})"><strong style="font-size:.875rem">${a.title}</strong><span style="font-size:.75rem;color:#7a7a9a;margin-left:8px">${a.artistName}</span></div>`; });
+  }
+  if (data.playlists?.length) {
+    html += `<p class="search-label">Playlists</p>`;
+    data.playlists.forEach(p => { html += `<div class="search-item" onclick="openPlaylist(${p.playlistId})"><strong style="font-size:.875rem">${p.name}</strong></div>`; });
+  }
+  if (!html) html = `<p style="color:#7a7a9a;font-size:.875rem;text-align:center;padding:18px 0">No results found</p>`;
+  box.innerHTML = html;
+  document.getElementById("searchResults").style.display = "block";
+}
+document.addEventListener("click", e => {
+  if (!document.getElementById("searchResults").contains(e.target) && e.target.id !== "searchInput")
+    document.getElementById("searchResults").style.display = "none";
+});
+function logout() { localStorage.removeItem("jwt"); document.cookie="jwt=; path=/; max-age=0; SameSite=Strict"; window.location.href="/login"; }
+function openSong(id)   { window.location.href = "/view/songs/"  + id; }
+function openArtist(id) { window.location.href = "/view/artist/" + id; }
+function openAlbum(id)  { window.location.href = "/view/album/"  + id; }
+function openPlaylist() { window.location.href = "/playlists"; }
+
+/* 
+   SEE ALL DRAWER
+ */
+const DRAWER_CONFIG = {
+  songs:     { title: 'All Trending Songs',   endpoint: '/songs/all',      render: renderAllSongs,    sort: (a,b) => (b.playCount||0)-(a.playCount||0) },
+  artists:   { title: 'All Popular Artists',  endpoint: '/artist/all',     render: renderAllArtists,  sort: (a,b) => (b.followerCount||0)-(a.followerCount||0) },
+  albums:    { title: 'All Latest Albums',    endpoint: '/album/all',      render: renderAllAlbums,   sort: null },
+  podcasts:  { title: 'All Podcasts',         endpoint: '/podcast/all',    render: renderAllPodcasts, sort: null },
+  playlists: { title: 'All Public Playlists', endpoint: '/playlist/public',render: renderAllPlaylists,sort: null }
+};
+
+function openDrawer(type) {
+  const cfg = DRAWER_CONFIG[type];
+  if (!cfg) return;
+  document.getElementById('saTitle').textContent = cfg.title;
+  document.getElementById('saCount').textContent = '';
+  document.getElementById('saBody').innerHTML = '<div class="sa-loading"><i class="bi bi-arrow-repeat" style="animation:spin 1s linear infinite;display:inline-block"></i> Loading…</div>';
+  document.getElementById('saOverlay').classList.add('open');
+  document.getElementById('saDrawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  fetch(cfg.endpoint)
+    .then(r => r.ok ? r.json() : Promise.reject(r.status))
+    .then(data => {
+      let items = Array.isArray(data) ? data : (data.content || data.data || []);
+      if (cfg.sort) items = items.slice().sort(cfg.sort);
+      document.getElementById('saCount').textContent = items.length + ' items';
+      document.getElementById('saBody').innerHTML = items.length
+        ? cfg.render(items)
+        : '<div class="sa-loading">Nothing to show yet.</div>';
+    })
+    .catch(() => {
+      document.getElementById('saBody').innerHTML = '<div class="sa-loading" style="color:#ff4d6d">Failed to load. Please try again.</div>';
+    });
+}
+
+function closeDrawer() {
+  document.getElementById('saOverlay').classList.remove('open');
+  document.getElementById('saDrawer').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function renderAllSongs(songs) {
+  return songs.map((s, i) => `
+    <div class="sa-song-item" onclick="openSong(${s.songId})">
+      <span class="sa-song-num">${i+1}</span>
+      <div class="sa-thumb">
+        ${s.album?.coverImage ? `<img src="${esc(s.album.coverImage)}" alt="">` : '<i class="bi bi-music-note"></i>'}
+      </div>
+      <div class="sa-info">
+        <strong>${esc(s.title)}</strong>
+        <span>${esc(s.artist?.artistName || s.artistName || '—')}</span>
+      </div>
+      <span class="sa-badge">${s.playCount ?? ''}</span>
+    </div>
+    <div class="sa-divider"></div>
+  `).join('');
+}
+
+function renderAllArtists(artists) {
+  return artists.map(a => {
+    const img = a.user?.profileImage;
+    const avatar = img
+      ? `<img src="${esc(img)}" style="width:100%;height:100%;object-fit:fill;border-radius:50%;display:block;" alt="">`
+      : esc((a.artistName||'?')[0].toUpperCase());
+    const bg = img ? 'background:transparent;' : '';
+    return `
+    <a class="sa-artist-item" href="/view/artist/${a.artistId}">
+      <div class="sa-av" style="${bg}">${avatar}</div>
+      <div class="sa-info">
+        <strong>${esc(a.artistName)}</strong>
+        <span>Followers: <b style="color:var(--green)">${a.followerCount ?? 0}</b></span>
+      </div>
+    </a>
+    <div class="sa-divider"></div>
+  `}).join('');
+}
+
+function renderAllAlbums(albums) {
+  return `<div class="sa-album-grid">` + albums.map(a => `
+    <a class="sa-album-item" href="/view/album/${a.albumId}">
+      <div class="sa-album-art">
+        ${a.coverImage ? `<img src="${esc(a.coverImage)}" alt="">` : '💿'}
+      </div>
+      <div class="sa-album-body">
+        <strong>${esc(a.title)}</strong>
+        <span>${esc(a.artist?.artistName || a.artistName || '—')}</span>
+        <em>${esc(a.releaseDate || '')}</em>
+      </div>
+    </a>
+  `).join('') + `</div>`;
+}
+
+function renderAllPodcasts(podcasts) {
+  return podcasts.map(p => `
+    <a class="sa-podcast-item" href="/view/podcast/${p.podcastId}">
+      <div class="sa-podcast-icon"><i class="bi bi-mic-fill"></i></div>
+      <div class="sa-podcast-info">
+        <strong>${esc(p.title)}</strong>
+        <span>${esc(p.description || '')}</span>
+      </div>
+    </a>
+    <div class="sa-divider"></div>
+  `).join('');
+}
+
+function renderAllPlaylists(playlists) {
+  return playlists.map(p => `
+    <div class="sa-playlist-item">
+      <span class="pl-badge" style="font-size:.6rem;padding:2px 6px">Playlist</span>
+      <strong>${esc(p.name)}</strong>
+      <p>${esc(p.description || '')}</p>
+    </div>
+    <div class="sa-divider"></div>
+  `).join('');
+}
+
+/* spin animation */
+const styleEl = document.createElement('style');
+styleEl.textContent = '@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}';
+document.head.appendChild(styleEl);
+
+/* ── BOTTOM PLAYER ── */
+(function () {
+  const audio=document.getElementById('globalAudio'),bp=document.getElementById('bp'),bpPlay=document.getElementById('bpPlay'),bpRew=document.getElementById('bpRew'),bpFwd=document.getElementById('bpFwd'),bpFill=document.getElementById('bpFill'),bpCur=document.getElementById('bpCur'),bpDur=document.getElementById('bpDur'),bpBar=document.getElementById('bpBar'),bpVolBtn=document.getElementById('bpVolBtn'),bpVolSl=document.getElementById('bpVolSlider'),bpTitle=document.getElementById('bpTitle'),bpArtist=document.getElementById('bpArtist'),bpArtEl=document.getElementById('bpArt');
+  function fmt(s){if(!s||isNaN(s))return'0:00';return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');}
+  let state={};try{state=JSON.parse(sessionStorage.getItem('revplay_player')||'{}');}catch(e){}
+  if(state.src){audio.src=state.src;audio.volume=state.volume??1;bpVolSl.value=audio.volume;bpTitle.textContent=state.title||'No song playing';bpArtist.textContent=state.artist||'—';bpArtEl.innerHTML=state.cover?`<img src="${state.cover}">`:'♪';if(audio.readyState>=1){if(state.currentTime)audio.currentTime=state.currentTime;bpDur.textContent=fmt(audio.duration);if(state.playing)audio.play().catch(()=>{});}else{audio.addEventListener('loadedmetadata',()=>{if(state.currentTime)audio.currentTime=state.currentTime;bpDur.textContent=fmt(audio.duration);if(state.playing)audio.play().catch(()=>{});},{once:true});}}
+  function saveState(){sessionStorage.setItem('revplay_player',JSON.stringify({src:audio.src,title:bpTitle.textContent,artist:bpArtist.textContent,cover:state.cover||'',songId:state.songId,currentTime:audio.currentTime,volume:audio.volume,playing:!audio.paused}));}
+  audio.addEventListener('timeupdate',()=>{if(!audio.duration)return;const pct=(audio.currentTime/audio.duration)*100;bpFill.style.width=pct+'%';bp.style.setProperty('--bp-pct',pct+'%');bpCur.textContent=fmt(audio.currentTime);saveState();});
+  audio.addEventListener('loadedmetadata',()=>{bpDur.textContent=fmt(audio.duration);});
+  audio.addEventListener('play',()=>{bpPlay.innerHTML='<i class="bi bi-pause-fill"></i>';saveState();});
+  audio.addEventListener('pause',()=>{bpPlay.innerHTML='<i class="bi bi-play-fill"></i>';saveState();});
+  audio.addEventListener('ended',()=>{bpPlay.innerHTML='<i class="bi bi-play-fill"></i>';saveState();});
+  bpPlay.addEventListener('click',()=>audio.paused?audio.play():audio.pause());
+  bpRew.addEventListener('click',()=>{audio.currentTime=Math.max(0,audio.currentTime-10);});
+  bpFwd.addEventListener('click',()=>{audio.currentTime=Math.min(audio.duration||0,audio.currentTime+10);});
+  bpBar.addEventListener('click',e=>{if(!audio.duration)return;const r=bpBar.getBoundingClientRect();audio.currentTime=((e.clientX-r.left)/r.width)*audio.duration;});
+  let lastVol=1;
+  function setVol(v){audio.volume=Math.max(0,Math.min(1,v));bpVolSl.value=audio.volume;const icon=audio.volume===0?'volume-mute-fill':audio.volume<.5?'volume-down-fill':'volume-up-fill';bpVolBtn.innerHTML=`<i class="bi bi-${icon}"></i>`;}
+  bpVolSl.addEventListener('input',e=>setVol(parseFloat(e.target.value)));
+  bpVolBtn.addEventListener('click',()=>audio.volume>0?(lastVol=audio.volume,setVol(0)):setVol(lastVol));
+})();
+</script>
+</body>
+</html>
