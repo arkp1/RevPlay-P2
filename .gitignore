@@ -31,3 +31,12 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Audio files
+uploads/
+*.mp3
+*.wav
+
+# Build files
+target/
+bin/
