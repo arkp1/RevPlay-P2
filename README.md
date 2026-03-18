@@ -75,7 +75,7 @@ The app runs on port `8585` and is served entirely through server-side rendered 
 ---
 ## Architecture Diagram
 
-![Architecture Diagram]()
+![Architecture Diagram](Revplay_Architecture_Diagram.jpeg)
 
 ---
 
