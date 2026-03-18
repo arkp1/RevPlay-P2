@@ -73,6 +73,11 @@ The app runs on port `8585` and is served entirely through server-side rendered 
 | Testing | JUnit 4, Mockito |
 
 ---
+## Architecture Diagram
+
+![Architecture Diagram]()
+
+---
 
 ## Project Structure
 
