@@ -1,7 +1,7 @@
 # 🎵 RevPlay
 
 > A full-stack music streaming web application built with **Spring Boot**, **Thymeleaf**, and **MySQL** — supporting songs, albums, podcasts, playlists, and artist analytics in a unified platform.
-
+![](Revplay_home_page.png)
 ---
 
 ## 📌 Table of Contents
